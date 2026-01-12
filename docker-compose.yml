@@ -1,0 +1,22 @@
+services:
+  db:
+    container_name: ${POSTGRES_HOST}
+    image: postgres:18
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - furntours-db-volume:/var/lib/postgres/18/docker:Z
+
+  node:
+    container_name: furntours-api
+    image: node:25
+    depends_on:
+      - db
+    command: bash -c "cd /usr/src/; npm i; npm run start:dev"
+    volumes:
+      - ./:/usr/src:Z
+
+volumes:
+  furntours-db-volume:
