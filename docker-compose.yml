@@ -12,6 +12,8 @@ services:
   node:
     container_name: furntours-api
     image: node:25
+    ports:
+      - 3000:3000
     depends_on:
       - db
     command: bash -c "cd /usr/src/; npm i; npm run start:dev"
