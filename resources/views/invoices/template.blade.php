@@ -5,47 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Facture {{ $invoiceNumber }}</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Helvetica', Arial, sans-serif;
-            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #2c3e50;
+            background: white;
             margin: 0;
             padding: 0;
         }
 
         .container {
             max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
+            margin: 0;
+            background: white;
+            padding: 40px 40px 180px 40px;
+        }
+
+        .page-break-margin {
+            margin-top: 60px;
         }
 
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+            width: 100%;
             margin-bottom: 40px;
-            border-bottom: 2px solid #1e40af;
-            padding-bottom: 20px;
+            border-bottom: 3px solid #27CFEA;
+            padding-bottom: 30px;
         }
 
-        .company-info h1 {
+        .company-info {
+            width: 60%;
+            float: left;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            float: left;
+            margin-right: 15px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: white;
+            border: 3px solid #FFE97D;
+            box-shadow: 0 0 0 2px #27CFEA;
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .company-details {
+            padding-top: 15px;
+            margin-left: 100px;
+        }
+
+        .company-details h1 {
             margin: 0;
-            color: #1e40af;
-            font-size: 32px;
+            color: #27CFEA;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .company-details p {
+            margin: 5px 0 0 0;
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
         }
 
         .invoice-info {
+            width: 38%;
+            float: right;
             text-align: right;
         }
 
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
         .invoice-info p {
-            margin: 5px 0;
+            margin: 8px 0;
             font-size: 13px;
+            line-height: 1.5;
         }
 
         .invoice-number {
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
-            color: #1e40af;
+            color: #282a36;
+            background: #FFE97D;
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 10px;
+            border-left: 4px solid #27CFEA;
         }
 
         section {
@@ -53,125 +114,198 @@
         }
 
         .section-title {
-            font-weight: bold;
-            font-size: 13px;
-            color: #1e40af;
+            font-weight: 700;
+            font-size: 12px;
+            color: #27CFEA;
             text-transform: uppercase;
-            margin-bottom: 10px;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 3px solid #FFE97D;
+            padding-left: 8px;
+            border-left: 3px solid #27CFEA;
+        }
+
+        .info-row {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .info-block {
+            width: 48%;
+            float: left;
+            margin-right: 4%;
+        }
+
+        .info-block:last-child {
+            margin-right: 0;
         }
 
         .billing-info, .customer-info {
-            font-size: 12px;
-            line-height: 1.6;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .billing-info p, .customer-info p {
+            margin: 5px 0;
+        }
+
+        .billing-info strong, .customer-info strong {
+            color: #27CFEA;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
+            font-size: 13px;
             margin-bottom: 20px;
+            margin-top: 40px;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        tbody tr {
+            page-break-inside: avoid;
         }
 
         th {
-            background-color: #f0f0f0;
-            padding: 10px;
+            background: #27CFEA;
+            border-right: 1px solid #80DCFA;
+            color: #282a36;
+            padding: 12px;
             text-align: left;
-            font-weight: bold;
-            border-bottom: 1px solid #ddd;
-            color: #1e40af;
+            font-weight: 600;
         }
 
         td {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        tbody tr:hover {
+            background: #f3f4f6;
         }
 
         td.right {
             text-align: right;
         }
 
-        .total-row {
-            font-weight: bold;
-        }
-
-        .amount-total {
-            font-size: 16px;
-            color: #1e40af;
-        }
-
         .summary {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 30px;
+            width: 100%;
+            text-align: right;
+            margin-top: 40px;
         }
 
         .summary-box {
-            width: 250px;
+            width: 280px;
+            display: inline-block;
+            text-align: left;
+            background: #f9fafb;
+            border: 2px solid #80DCFA;
+            border-top: 3px solid #FFE97D;
+            border-radius: 8px;
+            padding: 20px;
         }
 
         .summary-line {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
+            width: 100%;
+            margin-bottom: 12px;
             font-size: 13px;
         }
 
+        .summary-line span:first-child {
+            float: left;
+        }
+
+        .summary-line span:last-child {
+            float: right;
+            text-align: right;
+            min-width: 80px;
+        }
+
         .summary-total {
-            border-top: 2px solid #1e40af;
-            padding-top: 10px;
-            margin-top: 10px;
-            font-weight: bold;
+            border-top: 2px solid #27CFEA;
+            padding-top: 12px;
+            margin-top: 12px;
+            font-weight: 700;
             font-size: 16px;
-            color: #1e40af;
+            color: #27CFEA;
         }
 
         .footer {
-            border-top: 1px solid #ddd;
-            padding-top: 20px;
-            margin-top: 40px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 2px solid #e5e7eb;
+            padding: 20px 40px;
             text-align: center;
             font-size: 11px;
-            color: #666;
+            color: #6b7280;
+            line-height: 1.8;
+        }
+
+        .footer p {
+            margin: 8px 0;
         }
 
         .break {
             page-break-after: always;
         }
+
+        .paw-print {
+            color: #27CFEA;
+            opacity: 0.1;
+            font-size: 80px;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            z-index: -1;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="clearfix">
             <div class="company-info">
-                <h1>FurTours</h1>
-                <p style="margin-top: 10px; font-size: 12px; color: #666;">
-                    Votre partenaire en voyages animaliers
-                </p>
+                <div class="logo">
+                    <img src="/public/img/furntours-logo.png" alt="Fur'N'Tours">
+                </div>
+                <div class="company-details">
+                    <h1>Fur'N'Tours</h1>
+                    <p>Association Furry</p>
+                </div>
             </div>
             <div class="invoice-info">
                 <p class="invoice-number">{{ $invoiceNumber }}</p>
-                <p><strong>Date :</strong> {{ $issuedAt->format('d/m/Y') }}</p>
-                <p><strong>Échéance :</strong> {{ $issuedAt->addDays(30)->format('d/m/Y') }}</p>
+                <p><strong>Date d'émission :</strong><br>{{ $issuedAt->format('d/m/Y') }}</p>
             </div>
         </header>
 
-        <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
-            <div style="flex: 1;">
+        <div class="info-row clearfix">
+            <div class="info-block">
                 <div class="section-title">Facturé à</div>
                 <div class="customer-info">
-                    <p><strong>{{ $order->customer_name }}</strong></p>
-                    <p>{{ $order->customer_email }}</p>
-                    <p>{{ $order->customer_phone }}</p>
-                    <p style="margin-top: 10px;">{{ $order->shipping_address }}</p>
+                    <p><strong>Nom:</strong> {{ $order->customer_name }}</p>
+                    <p><strong>Email:</strong> {{ $order->customer_email }}</p>
+                    <p><strong>Tel:</strong> {{ $order->customer_phone }}</p>
+                    <p><strong>Adresse:</strong> {{ $order->shipping_address }}</p>
                 </div>
             </div>
 
-            <div style="flex: 1;">
+            <div class="info-block">
                 <div class="section-title">Détails de la commande</div>
                 <div class="billing-info">
-                    <p><strong>Commande :</strong> {{ $order->order_number }}</p>
+                    <p><strong>Numéro :</strong> {{ $order->order_number }}</p>
                     <p><strong>Date :</strong> {{ $order->created_at->format('d/m/Y') }}</p>
-                    <p><strong>Statut :</strong> {{ ucfirst($order->status) }}</p>
+                <p><strong>Statut :</strong> <span style="background: #80DCFA; color: #282a36; padding: 2px 8px; border-radius: 4px;">{{ ucfirst($order->status) }}</span></p>
                 </div>
             </div>
         </div>
@@ -202,15 +336,15 @@
 
         <div class="summary">
             <div class="summary-box">
-                <div class="summary-line">
+                <div class="summary-line clearfix">
                     <span>Sous-total :</span>
                     <span>{{ number_format($order->total, 2, ',', ' ') }}€</span>
                 </div>
-                <div class="summary-line">
+                <div class="summary-line clearfix">
                     <span>Frais de port :</span>
                     <span>0,00€</span>
                 </div>
-                <div class="summary-line summary-total">
+                <div class="summary-line summary-total clearfix">
                     <span>Total TTC :</span>
                     <span>{{ number_format($order->total, 2, ',', ' ') }}€</span>
                 </div>
@@ -218,8 +352,16 @@
         </div>
 
         <div class="footer">
-            <p>Merci pour votre achat ! Cette facture est valable dans nos registres.</p>
-            <p>FurTours - Contact: contact@furtours.fr | Téléphone: +33 X XX XX XX XX</p>
+            <p><strong>Fur'N'Tours</strong></p>
+            <p>Merci de votre soutien envers notre association !</p>
+            <p style="margin-top: 15px; font-size: 10px;">
+                <strong>Contact :</strong> contact@furbar.fr | 
+                <strong>Telegram :</strong> https://telegram.furbar.fr | 
+                <strong>Site :</strong> https://furbar.fr
+            </p>
+            <p style="margin-top: 10px; color: #9ca3af; font-size: 10px;">
+                © 2026 Fur'N'Tours - Créée avec amour par la communauté furry de Tours
+            </p>
         </div>
     </div>
 </body>
