@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, CheckCircle, Pencil, Trash2, Package } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 import { computed } from 'vue';
+import NotificationContainer from '@/components/NotificationContainer.vue';
+import { useNotification } from '@/composables/useNotification';
+
 
 defineOptions({
     layout: AdminLayout,
@@ -29,17 +32,16 @@ interface Props {
 const props = defineProps<Props>();
 const page = usePage();
 
-const successMessage = ref<string | null>(null);
+const { success, error } = useNotification();
 
-// Récupérer le message flash
 watch(
     () => page.props.flash,
     (flash: any) => {
         if (flash?.success) {
-            successMessage.value = flash.success;
-            setTimeout(() => {
-                successMessage.value = null;
-            }, 5000);
+            success('Succès', flash.success);
+        }
+        if (flash?.error) {
+            error('Erreur', flash.error);
         }
     },
     { immediate: true, deep: true }
@@ -83,14 +85,7 @@ const canEdit = computed(() => {
     <div>
         <Head title="Admin - Gestion des Produits" />
 
-        <!-- Message de succès -->
-        <div
-            v-if="successMessage"
-            class="fixed top-30 left-1/2 z-50 flex items-center gap-3 rounded-lg border border-green-500/30 bg-green-500/20 px-6 py-4 text-green-400 shadow-lg animate-in fade-in slide-in-from-top-5"
-        >
-            <CheckCircle class="h-5 w-5" />
-            <span class="font-medium">{{ successMessage }}</span>
-        </div>
+        <NotificationContainer />
 
         <!-- Hero Section -->
         <section class="container mx-auto px-4">

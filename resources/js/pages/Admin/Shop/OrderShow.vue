@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage} from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { CreditCard, ClipboardList, ArrowLeft } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import NotificationContainer from '@/components/NotificationContainer.vue';
+import { useNotification } from '@/composables/useNotification';
 
 defineOptions({
   layout: AdminLayout,
@@ -44,16 +46,36 @@ interface OrderDetail {
 interface Props { order: OrderDetail }
 const props = defineProps<Props>();
 
+const { success, error } = useNotification();
+const page = usePage();
+
+watch(
+  () => page.props.flash,
+  (flash: any) => {
+    if (flash?.success) {
+      success('Succès', flash.success);
+    }
+    if (flash?.error) {
+      error('Erreur', flash.error);
+    }
+  },
+  { immediate: true, deep: true }
+);
+
 const newStatus = ref<OrderDetail['status']>(props.order.status);
 
 const updateStatus = () => {
   router.put(`/admin/orders/${props.order.id}`, { status: newStatus.value });
 };
+
+
 </script>
 
 <template>
   <div>
     <Head :title="`Admin - Commande ${props.order.order_number}`" />
+
+    <NotificationContainer />
 
     <section class="container mx-auto px-4">
       <div class="mx-auto max-w-7xl mb-8">

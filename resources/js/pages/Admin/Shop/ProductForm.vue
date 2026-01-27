@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Save, ImagePlus } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import NotificationContainer from '@/components/NotificationContainer.vue';
+import { useNotification } from '@/composables/useNotification';
 
 defineOptions({
     layout: AdminLayout,
@@ -41,6 +43,22 @@ const form = useForm({
     image: null as File | null,
     active: props.product?.active ?? true,
 });
+
+const { success, error } = useNotification();
+const page = usePage();
+
+watch(
+    () => page.props.flash,
+    (flash: any) => {
+        if (flash?.success) {
+            success('Succès', flash.success);
+        }
+        if (flash?.error) {
+            error('Erreur', flash.error);
+        }
+    },
+    { immediate: true, deep: true }
+)
 
 const generateSlug = () => {
     const slug = form.name
@@ -89,11 +107,15 @@ const submit = () => {
         });
     }
 };
+
+
 </script>
 
 <template>
     <div>
         <Head :title="`Admin - ${isEditing ? 'Modifier' : 'Créer'} un produit`" />
+
+        <NotificationContainer />
 
         <!-- Header -->
         <section class="container mx-auto px-4 mb-8">

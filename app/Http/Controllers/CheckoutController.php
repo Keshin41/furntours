@@ -42,12 +42,19 @@ class CheckoutController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'total' => 'required|numeric|min:0',
         ]);
-
+        //verifier le stock des produits
+        foreach ($validated['items'] as $item) {
+            $product = \App\Models\Product::find($item['id']);
+            if (!$product || $product->stock < $item['quantity']) {
+                return back()->withErrors(['error' => 'Stock insuffisant pour le produit: ' . $item['name']]);
+            }
+        }
+        
         try {
             // Générer un numéro de commande unique
             $orderNumber = 'CMD-' . strtoupper(Str::random(8)) . '-' . time();
 
-            // Créer la commande (sans user obligatoire, utiliser l'email)
+            // Créer la commande
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'order_number' => $orderNumber,
@@ -86,9 +93,6 @@ class CheckoutController extends Controller
                     'amount' => $order->total,
                 ]);
             }
-
-            // PayPal ou autre méthode de paiement
-            return redirect('/boutique/panier')->with('success', 'Commande créée avec succès');
 
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Erreur lors de la création de la commande: ' . $e->getMessage()]);

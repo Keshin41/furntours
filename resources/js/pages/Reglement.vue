@@ -15,88 +15,6 @@ defineOptions({
 const props = defineProps<{ reglement: Reglement }>();
 </script>
 
-<style scoped>
-.reglement-content :deep(h1) {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
-    font-weight: bold;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-    color: #67e8f9;
-}
-
-.reglement-content :deep(h1:first-child) {
-    margin-top: 0;
-}
-
-.reglement-content :deep(h2) {
-    font-size: 1.875rem;
-    line-height: 2.25rem;
-    font-weight: bold;
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
-    color: #67e8f9;
-}
-
-.reglement-content :deep(h2:first-child) {
-    margin-top: 0;
-}
-
-.reglement-content :deep(h3) {
-    font-size: 1.5rem;
-    line-height: 2rem;
-    font-weight: bold;
-    margin-top: 1.25rem;
-    margin-bottom: 0.625rem;
-    color: #67e8f9;
-}
-
-.reglement-content :deep(h3:first-child) {
-    margin-top: 0;
-}
-
-.reglement-content :deep(p) {
-    margin-bottom: 1rem;
-    line-height: 1.75;
-}
-
-.reglement-content :deep(p:last-child) {
-    margin-bottom: 0;
-}
-
-.reglement-content :deep(ul),
-.reglement-content :deep(ol) {
-    padding-left: 1.5rem;
-    margin-top: 0.75rem;
-    margin-bottom: 1rem;
-}
-
-.reglement-content :deep(ul) {
-    list-style-type: disc;
-}
-
-.reglement-content :deep(ol) {
-    list-style-type: decimal;
-}
-
-.reglement-content :deep(li) {
-    margin-bottom: 0.5rem;
-}
-
-.reglement-content :deep(a) {
-    color: #67e8f9;
-    text-decoration: underline;
-}
-
-.reglement-content :deep(a:hover) {
-    color: #22d3ee;
-}
-
-.reglement-content :deep(strong) {
-    font-weight: 700;
-}
-</style>
-
 <template>
     <div>
         <Head :title="props.reglement?.title ?? 'Règlement intérieur'" />
@@ -117,7 +35,7 @@ const props = defineProps<{ reglement: Reglement }>();
         <section class="bg-dark py-12">
             <div class="container mx-auto px-4">
                 <div class="mx-auto max-w-5xl rounded-lg border border-light-blue/30 bg-dark/60 p-8">
-                    <div class="reglement-content prose prose-invert max-w-none text-gray-100" v-html="props.reglement?.content"></div>
+                    <div class="formatted-content text-gray-100" v-html="props.reglement?.content"></div>
                 </div>
             </div>
         </section>

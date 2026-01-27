@@ -41,7 +41,7 @@ const props = defineProps<Props>();
                     <div class="text-center">
                         <p class="mx-auto max-w-2xl text-lg text-muted-foreground">
                             Si vous avez un furbar et que vous voulez un {ville}.furbar.fr, vous pouvez DM 
-                            <a href="https://twitter.com/pandarch" target="_blank" class="text-blue hover:underline">@pandarch</a>
+                            <a href="https://t.me/pandarch" target="_blank" class="text-blue hover:underline">@pandarch</a>
                         </p>
                     </div>
                 </div>

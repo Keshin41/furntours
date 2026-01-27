@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -14,7 +15,7 @@ class ProfileController extends Controller
     public function edit(Request $request): Response
     {
         return Inertia::render('Admin/Profile', [
-            'user' => $request->user()->only(['id', 'name', 'email']),
+            'user' => $request->user()->only(['id', 'name', 'email', 'photo']),
         ]);
     }
 
@@ -27,6 +28,7 @@ class ProfileController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'current_password' => ['nullable', 'required_with:password'],
             'password' => ['nullable', 'confirmed', Password::defaults()],
+            'photo' => ['nullable', 'image', 'max:5120'], // 5MB max
         ]);
 
         // Verify current password if trying to change password
@@ -38,6 +40,16 @@ class ProfileController extends Controller
             }
 
             $user->password = Hash::make($validated['password']);
+        }
+
+        if ($request->hasFile('photo')) {
+            //Suppression de l'ancienne photo si existe
+            if ($user->photo) {
+                Storage::disk('public')->delete($user->photo);
+            }
+
+            $path = $request->file('photo')->store('staff', 'public');
+            $user->photo = $path;
         }
 
         $user->name = $validated['name'];

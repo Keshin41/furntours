@@ -3,7 +3,9 @@ import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { FileText, Shield, Scale, BookOpen, Users, Activity, CheckCircle, AlertCircle } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { watch } from 'vue';
+import { useNotification } from '@/composables/useNotification';
+import NotificationContainer from '@/components/NotificationContainer.vue';
 
 defineOptions({
     layout: AdminLayout,
@@ -18,7 +20,20 @@ interface SettingCard {
 }
 
 const page = usePage();
-const flashMessage = computed(() => page.props.flash as { success?: string; error?: string } | null);
+const {success , error} = useNotification();
+
+watch(
+  () => page.props.flash,
+  (flash: any) => {
+    if (flash?.success) {
+      success('Succès', flash.success);
+    }
+    if (flash?.error) {
+      error('Erreur', flash.error);
+    }
+  },
+  { immediate: true, deep: true }
+);
 
 const settings: SettingCard[] = [
     {
@@ -70,20 +85,7 @@ const settings: SettingCard[] = [
     <div>
         <Head title="Admin - Paramètres" />
 
-        <!-- Flash Messages -->
-        <div v-if="flashMessage?.success" class="fixed top-20 left-1/2 -translate-x-1/2 z-50">
-            <div class="flex items-center gap-3 rounded-lg border border-green-500/50 bg-green-500/10 px-6 py-3 text-green-300 shadow-lg shadow-green-500/20">
-                <CheckCircle class="h-5 w-5 flex-shrink-0" />
-                <p>{{ flashMessage.success }}</p>
-            </div>
-        </div>
-
-        <div v-if="flashMessage?.error" class="fixed top-20 left-1/2 -translate-x-1/2 z-50">
-            <div class="flex items-center gap-3 rounded-lg border border-red-500/50 bg-red-500/10 px-6 py-3 text-red-300 shadow-lg shadow-red-500/20">
-                <AlertCircle class="h-5 w-5 flex-shrink-0" />
-                <p>{{ flashMessage.error }}</p>
-            </div>
-        </div>
+        <NotificationContainer />
 
         <!-- Hero Section -->
         <section class="container mx-auto px-4 mb-8">

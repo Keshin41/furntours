@@ -6,27 +6,33 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import InputError from '@/components/InputError.vue';
 import NotificationContainer from '@/components/NotificationContainer.vue';
-import { useForm, Head, usePage } from '@inertiajs/vue3';
 import { useNotification } from '@/composables/useNotification';
-import { LoaderCircle, User, Lock, Mail } from 'lucide-vue-next';
-import { watch } from 'vue';
+import { LoaderCircle, User, Lock, Mail, Image } from 'lucide-vue-next';
+import { watch, ref } from 'vue';
+import { useForm, Head, usePage } from '@inertiajs/vue3';
 
 interface Props {
     user: {
         id: number;
         name: string;
         email: string;
+        photo?: string | null;
     };
 }
 
 const props = defineProps<Props>();
 const page = usePage();
-const { success } = useNotification();
+const { success, error } = useNotification();
 
 const profileForm = useForm({
     name: props.user.name,
     email: props.user.email,
+    photo: null as File | null,
 });
+
+
+const avatarPreview = ref<string | null>("/storage/" + props.user.photo);
+
 
 const passwordForm = useForm({
     current_password: '',
@@ -35,17 +41,44 @@ const passwordForm = useForm({
 });
 
 // Watch for flash success messages
-watch(() => page.props.flash?.success, (message) => {
-    if (message) {
-        success('Succès', message as string);
+watch(
+  () => page.props.flash,
+  (flash: any) => {
+    if (flash?.success) {
+      success('Succès', flash.success);
     }
-});
+    if (flash?.error) {
+      error('Erreur', flash.error);
+    }
+  },
+  { immediate: true, deep: true }
+);
 
 const updateProfile = () => {
     profileForm.put('/admin/profile', {
         preserveScroll: true,
+    });
+};
+
+const handleAvatarChange = (event: Event) => {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+        profileForm.photo = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            avatarPreview.value = e.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+const updateAvatar = () => {
+    profileForm.post('/admin/profile', {
+        preserveScroll: true,
+        forceFormData: true,
         onSuccess: () => {
-            // Profile updated
+            profileForm.reset();
+            avatarPreview.value = "/storage/" + props.user.photo;
         },
     });
 };
@@ -75,8 +108,64 @@ const updatePassword = () => {
                 </p>
             </div>
 
-            <div class="grid gap-6 lg:grid-cols-2">
+            <div class="grid gap-6 lg:grid-cols-3">
+                <!-- Profile Picture Card -->
+                <Card>
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2">
+                            <Image class="h-5 w-5 text-light-blue" />
+                            Photo de profil
+                        </CardTitle>
+                        <CardDescription>
+                            Téléchargez une nouvelle photo
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form @submit.prevent="updateAvatar" class="space-y-4">
+                            <div class="flex justify-center">
+                                <div
+                                    v-if="avatarPreview"
+                                    class="h-32 w-32 overflow-hidden rounded-full border-2 border-light-blue bg-gray-200"
+                                >
+                                    <img :src="avatarPreview" alt="Preview" class="h-full w-full object-cover" />
+                                </div>
+                                <div
+                                    v-else
+                                    class="flex h-32 w-32 items-center justify-center rounded-full border-2 border-dashed border-light-blue bg-gray-100 dark:bg-gray-800"
+                                >
+                                    <Image class="h-8 w-8 text-light-blue/50" />
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <Label for="photo">Sélectionner une image</Label>
+                                <Input
+                                    id="photo"
+                                    type="file"
+                                    accept="image/*"
+                                    @change="handleAvatarChange"
+                                    class="cursor-pointer"
+                                />
+                                <InputError :message="profileForm.errors.photo" />
+                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                    PNG, JPG, GIF jusqu'à 5MB
+                                </p>
+                            </div>
+
+                            <Button
+                                type="submit"
+                                class="w-full bg-gradient-to-r from-light-blue to-cyan-500 text-[#0f172a] hover:from-cyan-300 hover:to-light-blue"
+                                :disabled="profileForm.processing || !profileForm.photo"
+                            >
+                                <LoaderCircle v-if="profileForm.processing" class="mr-2 h-4 w-4 animate-spin" />
+                                Mettre à jour
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+
                 <!-- Profile Information Card -->
+                <div class="lg:col-span-2 space-y-6">
                 <Card>
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2">
@@ -193,6 +282,7 @@ const updatePassword = () => {
                         </form>
                     </CardContent>
                 </Card>
+                </div>
             </div>
         </div>
     </AdminLayout>

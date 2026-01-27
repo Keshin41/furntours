@@ -6,7 +6,7 @@ import { ArrowLeft, Truck, Lock, AlertCircle } from 'lucide-vue-next';
 import { useCart } from '@/composables/useCart';
 import { useNotification } from '@/composables/useNotification';
 import NotificationContainer from '@/components/NotificationContainer.vue';
-import { ref, computed } from 'vue';
+import { ref,watch } from 'vue';
 
 defineOptions({
     layout: AppHeaderLayout,
@@ -14,21 +14,18 @@ defineOptions({
 
 const { cartItems, total } = useCart();
 const { error, success } = useNotification();
-const page = usePage();
 
 const loading = ref(false);
 
-
-// Formulaire avec valeurs de test par défaut
 const formData = ref({
-    firstName: 'Jean',
-    lastName: 'Dupont',
-    email: 'test@example.com',
-    phone: '06 12 34 56 78',
-    address: '123 Rue de Test',
-    city: 'Paris',
-    postalCode: '75001',
-    country: 'FR',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    postalCode: '',
+    country: '',
     paymentMethod: 'stripe',
 });
 
@@ -118,6 +115,22 @@ const submitOrder = async () => {
 const backToCart = () => {
     router.visit('/boutique/panier');
 };
+
+// Recupère les messages d'erreur flash
+const page = usePage();
+watch(
+  () => page.props.flash,
+  (flash: any) => {
+    if (flash?.success) {
+      success('Succès', flash.success);
+    }
+    if (flash?.error) {
+      error('Erreur', flash.error);
+    }
+  },
+  { immediate: true, deep: true }
+);
+
 </script>
 
 <template>

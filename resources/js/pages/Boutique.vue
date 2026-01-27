@@ -3,7 +3,7 @@ import AppHeaderLayout from '@/layouts/app/AppHeaderLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Package, Users, Ticket, Filter } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useCart } from '@/composables/useCart';
 import { useNotification } from '@/composables/useNotification';
 import NotificationContainer from '@/components/NotificationContainer.vue';
@@ -32,7 +32,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const { addToCart: addToCartComposable } = useCart();
-const { success, error } = useNotification();
+const { success, error, warning } = useNotification();
 
 const productQuantities = ref<Record<number, number>>({});
 
@@ -59,6 +59,7 @@ const addToCart = (product: Product) => {
             category: product.category,
             stock: product.stock,
         }, quantity);
+
         // Afficher la notification avec image
         success(product.name, undefined, {
             image: product.image,
@@ -68,6 +69,10 @@ const addToCart = (product: Product) => {
         // Réinitialiser la quantité
         setProductQuantity(product.id, 1, product.stock);
     } catch (err: any) {
+        if (err.message.startsWith('Stock insuffisant')) {
+            warning('Stock insuffisant', `La quantité demandée pour "${product.name}" dépasse le stock disponible. `);
+            return;
+        }
         error('Erreur', err.message);
     }
 };
@@ -188,13 +193,13 @@ const setProductQuantity = (productId: number, quantity: number, stock: number) 
                                 v-if="product.stock < 10"
                                 :class="[
                                     'absolute top-3 left-3 px-3 py-1 rounded-full backdrop-blur-sm border',
-                                    product.stock === 0
+                                    product.stock <= 0
                                         ? 'bg-red-500/80 text-white border-red-400'
                                         : 'bg-yellow-500/80 text-white border-yellow-400',
                                 ]"
                             >
                                 <span class="text-xs font-semibold">
-                                    {{ product.stock === 0 ? 'Rupture' : `Stock limité (${product.stock})` }}
+                                    {{ product.stock <= 0 ? 'Rupture' : `Stock limité (${product.stock})` }}
                                 </span>
                             </div>
                         </div>
@@ -237,16 +242,16 @@ const setProductQuantity = (productId: number, quantity: number, stock: number) 
                                 
                                 <Button
                                     @click="addToCart(product)"
-                                    :disabled="product.stock === 0"
+                                    :disabled="product.stock <= 0"
                                     :class="[
                                         'font-semibold transition-all',
-                                        product.stock === 0
+                                        product.stock <= 0
                                             ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
                                             : 'bg-gradient-to-r from-light-blue to-cyan-500 text-[#2c3e50] hover:from-cyan-300 hover:to-light-blue hover:shadow-lg hover:shadow-light-blue/30',
                                     ]"
                                 >
                                     <ShoppingCart class="h-4 w-4 mr-2" />
-                                    {{ product.stock === 0 ? 'Épuisé' : 'Ajouter' }}
+                                    {{ product.stock <= 0 ? 'Épuisé' : 'Ajouter' }}
                                 </Button>
                             </div>
                         </div>

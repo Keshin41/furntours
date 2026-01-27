@@ -4,8 +4,11 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Form, Head, useForm } from '@inertiajs/vue3';
+import { Form, Head, useForm, usePage } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
+import { watch } from 'vue';
+import { useNotification } from '@/composables/useNotification';
+import NotificationContainer from '@/components/NotificationContainer.vue';
 
 defineOptions({
     layout: AppHeaderLayout,
@@ -15,6 +18,22 @@ const form = useForm({
     email: '',
     password: '',
 });
+
+const page = usePage();
+const { success, error } = useNotification();
+
+watch(
+  () => page.props.flash,
+  (flash: any) => {
+    if (flash?.success) {
+      success('Succès', flash.success);
+    }
+    if (flash?.error) {
+      error('Erreur', flash.error);
+    }
+  },
+  { immediate: true, deep: true }
+);
 
 const submit = () => {
     form.post('/admin/login', {
@@ -26,7 +45,9 @@ const submit = () => {
 <template>
     <div class="relative bg-gradient-to-br from-[#2c3e50] to-[#34495e] py-16">
         <Head title="Connexion Admin" />
-
+        
+        <NotificationContainer />
+        
         <div class="container mx-auto px-4">
             <div class="mx-auto max-w-md">
                 <div class="rounded-lg border border-white/15 bg-[#1f2a3b] p-8 shadow-2xl shadow-black/30">

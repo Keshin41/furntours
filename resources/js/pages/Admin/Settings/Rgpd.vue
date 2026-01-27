@@ -2,8 +2,10 @@
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import RichTextEditor from '@/components/RichTextEditor.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { watch, computed } from 'vue';
 import { Button } from '@/components/ui/button';
+import { useNotification } from '@/composables/useNotification';
+import NotificationContainer from '@/components/NotificationContainer.vue';
 
 defineOptions({
     layout: AdminLayout,
@@ -17,6 +19,21 @@ interface Rgpd {
 
 const props = defineProps<{ rgpd: Rgpd }>();
 const page = usePage();
+
+const { success, error } = useNotification();
+
+watch(
+  () => page.props.flash,
+  (flash: any) => {
+    if (flash?.success) {
+      success('Succès', flash.success);
+    }
+    if (flash?.error) {
+      error('Erreur', flash.error);
+    }
+  },
+  { immediate: true, deep: true }
+);
 
 const form = useForm({
     title: props.rgpd?.title ?? 'Politique de Confidentialité (RGPD)',
@@ -32,83 +49,11 @@ const submit = () => {
 };
 </script>
 
-<style scoped>
-.rgpd-preview :deep(h1) {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
-    font-weight: bold;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-    color: #67e8f9;
-}
-
-.rgpd-preview :deep(h1:first-child) {
-    margin-top: 0;
-}
-
-.rgpd-preview :deep(h2) {
-    font-size: 1.875rem;
-    line-height: 2.25rem;
-    font-weight: bold;
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
-    color: #67e8f9;
-}
-
-.rgpd-preview :deep(h2:first-child) {
-    margin-top: 0;
-}
-
-.rgpd-preview :deep(h3) {
-    font-size: 1.5rem;
-    line-height: 2rem;
-    font-weight: bold;
-    margin-top: 1.25rem;
-    margin-bottom: 0.625rem;
-    color: #67e8f9;
-}
-
-.rgpd-preview :deep(h3:first-child) {
-    margin-top: 0;
-}
-
-.rgpd-preview :deep(p) {
-    margin-bottom: 1rem;
-    line-height: 1.75;
-}
-
-.rgpd-preview :deep(p:last-child) {
-    margin-bottom: 0;
-}
-
-.rgpd-preview :deep(ul),
-.rgpd-preview :deep(ol) {
-    padding-left: 1.5rem;
-    margin-top: 0.75rem;
-    margin-bottom: 1rem;
-}
-
-.rgpd-preview :deep(ul) {
-    list-style-type: disc;
-}
-
-.rgpd-preview :deep(ol) {
-    list-style-type: decimal;
-}
-
-.rgpd-preview :deep(li) {
-    margin-bottom: 0.5rem;
-}
-
-.rgpd-preview :deep(strong) {
-    font-weight: 700;
-    color: #fbbf24;
-}
-</style>
-
 <template>
     <div>
         <Head title="Politique de Confidentialité (RGPD)" />
+
+        <NotificationContainer />
 
         <section class="container mx-auto px-4 py-8">
             <div class="mx-auto max-w-5xl">
@@ -170,7 +115,7 @@ const submit = () => {
 
                     <div class="rounded-lg border border-light-blue/30 bg-dark/60 p-4">
                         <h2 class="mb-3 text-lg font-semibold text-light-blue">Aperçu public</h2>
-                        <div class="rgpd-preview prose prose-invert max-w-none text-gray-100" v-html="form.content"></div>
+                        <div class="formatted-content max-w-none text-gray-100" v-html="form.content"></div>
                     </div>
                 </div>
             </div>

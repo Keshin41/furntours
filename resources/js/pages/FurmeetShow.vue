@@ -26,17 +26,6 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-};
-
 const isUpcoming = (dateString: string) => {
     return new Date(dateString) >= new Date();
 };

@@ -4,6 +4,8 @@ import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, CheckCircle, Pencil, Trash2, Shield, ShieldCheck, Crown, Copy, X, User } from 'lucide-vue-next';
 import { ref, watch, computed } from 'vue';
+import { useNotification } from '@/composables/useNotification';
+import NotificationContainer from '@/components/NotificationContainer.vue';
 
 defineOptions({
     layout: AdminLayout,
@@ -31,7 +33,8 @@ interface Props {
 const props = defineProps<Props>();
 const page = usePage();
 
-const successMessage = ref<string | null>(null);
+const { success, error } = useNotification();
+
 const showPasswordModal = ref(false);
 const temporaryPassword = ref<string | null>(null);
 const passwordCopied = ref(false);
@@ -40,16 +43,16 @@ const passwordCopied = ref(false);
 const flash = computed(() => page.props.flash as any);
 
 watch(
-    () => flash.value?.success,
-    (success) => {
-        if (success) {
-            successMessage.value = success;
-            setTimeout(() => {
-                successMessage.value = null;
-            }, 5000);
-        }
-    },
-    { immediate: true }
+  () => page.props.flash,
+  (flash: any) => {
+    if (flash?.success) {
+      success('Succès', flash.success);
+    }
+    if (flash?.error) {
+      error('Erreur', flash.error);
+    }
+  },
+  { immediate: true, deep: true }
 );
 
 watch(
@@ -127,14 +130,7 @@ const canEdit = (member: Staff): boolean => {
     <div>
         <Head title="Admin - Gestion du Staff" />
 
-        <!-- Message de succès -->
-        <div
-            v-if="successMessage"
-            class="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-lg border border-green-500/30 bg-green-500/20 px-6 py-4 text-green-400 shadow-lg animate-in fade-in slide-in-from-top-5"
-        >
-            <CheckCircle class="h-5 w-5" />
-            <span class="font-medium">{{ successMessage }}</span>
-        </div>
+        <NotificationContainer />
 
         <!-- Modal Mot de passe temporaire -->
         <div v-if="showPasswordModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">

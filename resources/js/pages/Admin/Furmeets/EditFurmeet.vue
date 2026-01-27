@@ -5,6 +5,8 @@ import { Head, useForm, router, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { computed, ref, watch } from 'vue';
 import { CheckCircle, AlertCircle } from 'lucide-vue-next';
+import { useNotification } from '@/composables/useNotification';
+import NotificationContainer from '@/components/NotificationContainer.vue';
 
 defineOptions({
     layout: AdminLayout,
@@ -34,27 +36,19 @@ if (!canManageFurmeets.value) {
     router.visit('/admin/furmeets');
 }
 
-const successMessage = ref<string | null>(null);
-const errorMessage = ref<string | null>(null);
-
+const { success, error } = useNotification();
 // Récupérer les messages flash
 watch(
-    () => page.props.flash,
-    (flash: any) => {
-        if (flash?.success) {
-            successMessage.value = flash.success;
-            setTimeout(() => {
-                successMessage.value = null;
-            }, 5000);
-        }
-        if (flash?.error) {
-            errorMessage.value = flash.error;
-            setTimeout(() => {
-                errorMessage.value = null;
-            }, 5000);
-        }
-    },
-    { immediate: true, deep: true }
+  () => page.props.flash,
+  (flash: any) => {
+    if (flash?.success) {
+      success('Succès', flash.success);
+    }
+    if (flash?.error) {
+      error('Erreur', flash.error);
+    }
+  },
+  { immediate: true, deep: true }
 );
 
 // Formater la date pour l'input datetime-local
@@ -98,23 +92,7 @@ const deleteFurMeet = () => {
     <div>
         <Head title="Modifier un FurMeet" />
 
-        <!-- Message de succès -->
-        <div
-            v-if="successMessage"
-            class="fixed top-46 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-lg border border-green-500/30 bg-green-500/20 px-6 py-4 text-green-400 shadow-lg animate-in fade-in slide-in-from-top-5"
-        >
-            <CheckCircle class="h-5 w-5" />
-            <span class="font-medium">{{ successMessage }}</span>
-        </div>
-
-        <!-- Message d'erreur -->
-        <div
-            v-if="errorMessage"
-            class="fixed top-46 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-lg border border-red-500/30 bg-red-500/20 px-6 py-4 text-red-400 shadow-lg animate-in fade-in slide-in-from-top-5"
-        >
-            <AlertCircle class="h-5 w-5" />
-            <span class="font-medium">{{ errorMessage }}</span>
-        </div>
+        <NotificationContainer />
 
         <!-- Hero Section -->
         <section class="container mx-auto px-4">

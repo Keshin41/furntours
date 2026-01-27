@@ -15,88 +15,6 @@ defineOptions({
 const props = defineProps<{ status: Status }>();
 </script>
 
-<style scoped>
-.status-content :deep(h1) {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
-    font-weight: bold;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-    color: #67e8f9;
-}
-
-.status-content :deep(h1:first-child) {
-    margin-top: 0;
-}
-
-.status-content :deep(h2) {
-    font-size: 1.875rem;
-    line-height: 2.25rem;
-    font-weight: bold;
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
-    color: #67e8f9;
-}
-
-.status-content :deep(h2:first-child) {
-    margin-top: 0;
-}
-
-.status-content :deep(h3) {
-    font-size: 1.5rem;
-    line-height: 2rem;
-    font-weight: bold;
-    margin-top: 1.25rem;
-    margin-bottom: 0.625rem;
-    color: #67e8f9;
-}
-
-.status-content :deep(h3:first-child) {
-    margin-top: 0;
-}
-
-.status-content :deep(p) {
-    margin-bottom: 1rem;
-    line-height: 1.75;
-}
-
-.status-content :deep(p:last-child) {
-    margin-bottom: 0;
-}
-
-.status-content :deep(ul),
-.status-content :deep(ol) {
-    padding-left: 1.5rem;
-    margin-top: 0.75rem;
-    margin-bottom: 1rem;
-}
-
-.status-content :deep(ul) {
-    list-style-type: disc;
-}
-
-.status-content :deep(ol) {
-    list-style-type: decimal;
-}
-
-.status-content :deep(li) {
-    margin-bottom: 0.5rem;
-}
-
-.status-content :deep(a) {
-    color: #67e8f9;
-    text-decoration: underline;
-}
-
-.status-content :deep(a:hover) {
-    color: #22d3ee;
-}
-
-.status-content :deep(strong) {
-    font-weight: 700;
-}
-</style>
-
 <template>
     <div>
         <Head :title="props.status?.title ?? 'Status'" />
@@ -117,7 +35,7 @@ const props = defineProps<{ status: Status }>();
         <section class="bg-dark py-12">
             <div class="container mx-auto px-4">
                 <div class="mx-auto max-w-5xl rounded-lg border border-light-blue/30 bg-dark/60 p-8">
-                    <div class="status-content prose prose-invert max-w-none text-gray-100" v-html="props.status?.content"></div>
+                    <div class="formatted-content text-gray-100" v-html="props.status?.content"></div>
                 </div>
             </div>
         </section>

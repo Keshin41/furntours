@@ -3,14 +3,29 @@ import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
 import AppHeaderLayout from '@/layouts/app/AppHeaderLayout.vue';
 import { Head, useForm, usePage, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { CheckCircle, AlertCircle, Lock } from 'lucide-vue-next';
+import { useNotification } from '@/composables/useNotification';
+import NotificationContainer from '@/components/NotificationContainer.vue';
 
 defineOptions({
   layout:  AppHeaderLayout,
 });
 const page = usePage();
-const flash = computed(() => page.props.flash as { success?: string; error?: string } | null);
+const { success, error } = useNotification();
+
+watch(
+  () => page.props.flash,
+  (flash: any) => {
+    if (flash?.success) {
+      success('Succès', flash.success);
+    }
+    if (flash?.error) {
+      error('Erreur', flash.error);
+    }
+  },
+  { immediate: true, deep: true }
+);
 
 const form = useForm({
   current_password: '',
@@ -45,20 +60,7 @@ const logout = () => {
       </div>
     </section>
 
-    <!-- Flash Messages -->
-    <div v-if="flash?.success" class="fixed top-20 left-1/2 -translate-x-1/2 z-50">
-      <div class="flex items-center gap-3 rounded-lg border border-green-500/50 bg-green-500/10 px-6 py-3 text-green-300 shadow-lg shadow-green-500/20">
-        <CheckCircle class="h-5 w-5 flex-shrink-0" />
-        <p>{{ flash.success }}</p>
-      </div>
-    </div>
-
-    <div v-if="flash?.error" class="fixed top-20 left-1/2 -translate-x-1/2 z-50">
-      <div class="flex items-center gap-3 rounded-lg border border-red-500/50 bg-red-500/10 px-6 py-3 text-red-300 shadow-lg shadow-red-500/20">
-        <AlertCircle class="h-5 w-5 flex-shrink-0" />
-        <p>{{ flash.error }}</p>
-      </div>
-    </div>
+    <NotificationContainer />
 
     <!-- Form -->
     <section class="bg-dark py-8">

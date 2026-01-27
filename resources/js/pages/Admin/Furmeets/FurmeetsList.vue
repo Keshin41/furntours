@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, CheckCircle } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { getTextFromHtml } from '@/lib/utils';
+import { useNotification } from '@/composables/useNotification';
+import NotificationContainer from '@/components/NotificationContainer.vue';
 
 defineOptions({
     layout: AdminLayout,
@@ -35,20 +37,19 @@ const canManageFurmeets = computed(() => {
     return currentUser.value.permissions?.includes('manage_furmeets') ?? false;
 });
 
-const successMessage = ref<string | null>(null);
+const { success, error } = useNotification();
 
-// Récupérer le message flash
 watch(
-    () => page.props.flash,
-    (flash: any) => {
-        if (flash?.success) {
-            successMessage.value = flash.success;
-            setTimeout(() => {
-                successMessage.value = null;
-            }, 5000);
-        }
-    },
-    { immediate: true, deep: true }
+  () => page.props.flash,
+  (flash: any) => {
+    if (flash?.success) {
+      success('Succès', flash.success);
+    }
+    if (flash?.error) {
+      error('Erreur', flash.error);
+    }
+  },
+  { immediate: true, deep: true }
 );
 
 const formatDate = (dateString: string) => {
@@ -67,14 +68,7 @@ const formatDate = (dateString: string) => {
     <div>
         <Head title="Admin - FurMeets" />
 
-        <!-- Message de succès -->
-        <div
-            v-if="successMessage"
-            class="fixed top-30 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-lg border border-green-500/30 bg-green-500/20 px-6 py-4 text-green-400 shadow-lg animate-in fade-in slide-in-from-top-5"
-        >
-            <CheckCircle class="h-5 w-5" />
-            <span class="font-medium">{{ successMessage }}</span>
-        </div>
+        <NotificationContainer />
 
         <!-- Hero Section -->
         <section class="container mx-auto px-4">
