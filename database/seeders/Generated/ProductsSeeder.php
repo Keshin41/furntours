@@ -20,12 +20,12 @@ class ProductsSeeder extends Seeder
     'slug' => 'paws',
     'description' => 'une belle pattoune UwU',
     'price' => '8.00',
-    'stock' => 8,
+    'stock' => 0,
     'image' => 'products/DfXz9ERbccR6aBCwnzzH2eQjGxSGJZYnlggc0dtL.png',
     'category' => 'merch',
     'active' => 1,
     'created_at' => '2026-01-22 21:33:42',
-    'updated_at' => '2026-01-23 21:58:01',
+    'updated_at' => '2026-01-27 22:43:39',
   ),
 ));
     }

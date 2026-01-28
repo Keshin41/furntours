@@ -55,7 +55,7 @@ class UsersSeeder extends Seeder
     'two_factor_secret' => NULL,
     'two_factor_recovery_codes' => NULL,
     'two_factor_confirmed_at' => NULL,
-    'remember_token' => 'uzqkQxfYUmOyZX6yKlKTE4iZFnF0ayovOW1CGNFumyfxXrq7B6uCCbnusgte',
+    'remember_token' => '6djZcY1TO9kMZEPe43V4lclYTEUZKwovHYMGEUBNPx98PVdjlW0tqAu5C4Je',
     'created_at' => '2026-01-23 17:15:59',
     'updated_at' => '2026-01-23 21:59:15',
   ),
@@ -85,12 +85,12 @@ class UsersSeeder extends Seeder
   3 => 
   array (
     'id' => 9,
-    'name' => 'Bluepaw',
+    'name' => 'Bluepaw2',
     'email' => 'blue@gmail.com',
     'role' => 'Présidente',
     'role_level' => 'moderator',
     'permissions' => '["manage_users", "manage_orders", "manage_furmeets", "view_statistics", "manage_content", "manage_products"]',
-    'photo' => 'staff/hBjuL6oNieH5m5y2fUevuObLwQEElW6wCtnz2vtg.jpg',
+    'photo' => 'staff/A7543hQVh44rcKwwAelIHKCMK0IbBZBBs2lTsSsA.gif',
     'social_links' => NULL,
     'staff_order' => 0,
     'is_staff_visible' => 1,
@@ -103,7 +103,7 @@ class UsersSeeder extends Seeder
     'two_factor_confirmed_at' => NULL,
     'remember_token' => 'DH7jiaz9cVTeu2lgGBaXfzbefGTpOtWwMKYlOXY7RlsC4L6mH2RNf19LSPjj',
     'created_at' => '2026-01-23 17:20:45',
-    'updated_at' => '2026-01-23 21:46:13',
+    'updated_at' => '2026-01-27 23:37:51',
   ),
   4 => 
   array (
