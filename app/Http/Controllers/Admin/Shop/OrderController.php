@@ -45,7 +45,7 @@ class OrderController extends Controller
             'status' => 'required|in:pending,processing,completed,cancelled',
         ]);
 
-        $order->update(['status' => $validated['status']]);
+        $order->update($validated);
 
         return redirect()->back()->with('success', 'Statut de la commande mis à jour');
     }

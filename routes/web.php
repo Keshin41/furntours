@@ -145,8 +145,8 @@ Route::prefix('admin')->name('admin.')->middleware(App\Http\Middleware\AdminAuth
     Route::post('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
     
     // FurMeets management routes
-    Route::prefix('/furmeets')->name('furmeets.')->group(function () {
-        Route::get('/', [App\Http\Controllers\Admin\Furmeets\FurMeetController::class, 'index'])->name('index');
+    Route::get('/furmeets', [App\Http\Controllers\Admin\Furmeets\FurMeetController::class, 'index'])->name('furmeets.index');
+    Route::prefix('/furmeets')->name('furmeets.')->middleware(App\Http\Middleware\CheckPermission::class . ':manage_furmeets')->group(function () {
         Route::get('/create', [App\Http\Controllers\Admin\Furmeets\FurMeetController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\Admin\Furmeets\FurMeetController::class, 'store'])->name('store');
         Route::get('/{furMeet}/edit', [App\Http\Controllers\Admin\Furmeets\FurMeetController::class, 'edit'])->name('edit');
@@ -155,7 +155,7 @@ Route::prefix('admin')->name('admin.')->middleware(App\Http\Middleware\AdminAuth
     });
 
     // Settings routes
-    Route::prefix('/settings')->name('settings.')->group(function () {
+    Route::prefix('/settings')->name('settings.')->middleware(App\Http\Middleware\CheckPermission::class . ':manage_settings')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\Settings\SettingsController::class, 'index'])->name('index');
         
         Route::get('/status', [App\Http\Controllers\Admin\Settings\StatusController::class, 'edit'])->name('status.edit');
@@ -169,11 +169,14 @@ Route::prefix('admin')->name('admin.')->middleware(App\Http\Middleware\AdminAuth
         
         Route::get('/rgpd', [App\Http\Controllers\Admin\Settings\RgpdController::class, 'edit'])->name('rgpd.edit');
         Route::put('/rgpd', [App\Http\Controllers\Admin\Settings\RgpdController::class, 'update'])->name('rgpd.update');
+        
+        Route::get('/hero-video', [App\Http\Controllers\Admin\Settings\HeroVideoController::class, 'show'])->name('hero-video.show');
+        Route::post('/hero-video', [App\Http\Controllers\Admin\Settings\HeroVideoController::class, 'update'])->name('hero-video.update');
     });
     
     // Staff management routes
-    Route::prefix('/staff')->name('staff.')->group(function () {
-        Route::get('/', [App\Http\Controllers\Admin\Staff\StaffController::class, 'index'])->name('index');
+    Route::get('/staff', [App\Http\Controllers\Admin\Staff\StaffController::class, 'index'])->name('staff.index');
+    Route::prefix('/staff')->name('staff.')->middleware(App\Http\Middleware\CheckPermission::class . ':manage_staff')->group(function () {
         Route::get('/create', [App\Http\Controllers\Admin\Staff\StaffController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\Admin\Staff\StaffController::class, 'store'])->name('store');
         Route::get('/{staff}/edit', [App\Http\Controllers\Admin\Staff\StaffController::class, 'edit'])->name('edit');
@@ -182,34 +185,44 @@ Route::prefix('admin')->name('admin.')->middleware(App\Http\Middleware\AdminAuth
         Route::patch('/{staff}', [App\Http\Controllers\Admin\Staff\StaffController::class, 'update']);
         Route::post('/{staff}/regenerate-password', [App\Http\Controllers\Admin\Staff\StaffController::class, 'regeneratePassword'])->name('regenerate-password');
         Route::delete('/{staff}', [App\Http\Controllers\Admin\Staff\StaffController::class, 'destroy'])->name('destroy');
-        });
+    });
 
     // Products management routes
-    Route::resource('/products', App\Http\Controllers\Admin\Shop\ProductController::class)->names([
-        'index' => 'products.index',
-        'create' => 'products.create',
-        'store' => 'products.store',
-        'show' => 'products.show',
-        'edit' => 'products.edit',
-        'update' => 'products.update',
-        'destroy' => 'products.destroy',
-    ]);
+    Route::resource('/products', App\Http\Controllers\Admin\Shop\ProductController::class)
+        ->names([
+            'index' => 'products.index',
+            'show' => 'products.show',
+        ]);
+
+    Route::resource('/products', App\Http\Controllers\Admin\Shop\ProductController::class)
+        ->names([
+            'create' => 'products.create',
+            'store' => 'products.store',
+            'edit' => 'products.edit',
+            'update' => 'products.update',
+            'destroy' => 'products.destroy',
+        ])
+        ->middleware(App\Http\Middleware\CheckPermission::class . ':manage_products');
 
     // Orders management routes
     Route::resource('/orders', App\Http\Controllers\Admin\Shop\OrderController::class)->names([
         'index' => 'orders.index',
+        'show' => 'orders.show',
+    ]);
+
+    Route::resource('/orders', App\Http\Controllers\Admin\Shop\OrderController::class)->names([
         'create' => 'orders.create',
         'store' => 'orders.store',
-        'show' => 'orders.show',
         'edit' => 'orders.edit',
         'update' => 'orders.update',
         'destroy' => 'orders.destroy',
-    ])->only(['index','show','update']);
+    ])
+        ->middleware(App\Http\Middleware\CheckPermission::class . ':manage_orders');
 
     // Invoices management routes
     Route::resource('/invoices', App\Http\Controllers\Admin\InvoiceController::class)->names([
         'index' => 'invoices.index',
         'show' => 'invoices.show',
-    ])->only(['index','show']);
+    ]); 
 });
 

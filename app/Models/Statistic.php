@@ -13,12 +13,16 @@ class Statistic extends Model
         'telegram_members',
         'association_members',
         'furmeets_count',
+        'hero_video_url',
+        'telegram_link',
     ];
 
     protected $casts = [
         'telegram_members' => 'integer',
         'association_members' => 'integer',
         'furmeets_count' => 'integer',
+        'hero_video_url' => 'string',
+        'telegram_link' => 'string',
     ];
 
     /**
@@ -32,6 +36,8 @@ class Statistic extends Model
                 'telegram_members' => 0,
                 'association_members' => 0,
                 'furmeets_count' => 0,
+                'hero_video_url' => '/videos/hero-background.webm',
+                'telegram_link' => 'https://t.me/furntours',
             ]
         );
     }

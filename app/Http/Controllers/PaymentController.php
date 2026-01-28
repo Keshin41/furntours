@@ -90,7 +90,7 @@ class PaymentController extends Controller
     /**
      * Webhook pour les événements Stripe
      */
-    public function handleWebhook(Request $request)
+    public function handleWebhook()
     {
         $payload = @file_get_contents('php://input');
         $sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';

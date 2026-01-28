@@ -43,13 +43,13 @@ class ProfileController extends Controller
         }
 
         if ($request->hasFile('photo')) {
+            $path = $request->file('photo')->store('staff', 'public');
+            $user->photo = $path;
+
             //Suppression de l'ancienne photo si existe
             if ($user->photo) {
                 Storage::disk('public')->delete($user->photo);
             }
-
-            $path = $request->file('photo')->store('staff', 'public');
-            $user->photo = $path;
         }
 
         $user->name = $validated['name'];

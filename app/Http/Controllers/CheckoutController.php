@@ -42,6 +42,7 @@ class CheckoutController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'total' => 'required|numeric|min:0',
         ]);
+        
         //verifier le stock des produits
         foreach ($validated['items'] as $item) {
             $product = \App\Models\Product::find($item['id']);

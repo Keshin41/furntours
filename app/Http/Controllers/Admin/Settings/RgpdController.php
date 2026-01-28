@@ -11,14 +11,8 @@ use Inertia\Response;
 
 class RgpdController extends Controller
 {
-    public function edit(Request $request): RedirectResponse|Response
+    public function edit(): RedirectResponse|Response
     {
-        $user = $request->user();
-
-        if (!$user || (!$user->hasPermission('manage_settings') && $user->role_level !== 'master')) {
-            return redirect()->route('admin.dashboard')->with('error', 'Vous n\'avez pas la permission d\'accéder à cette page.');
-        }
-
         $rgpd = Rgpd::current();
 
         return Inertia::render('Admin/Settings/Rgpd', [
@@ -32,12 +26,6 @@ class RgpdController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
-        $user = $request->user();
-
-        if (!$user || (!$user->hasPermission('manage_settings') && $user->role_level !== 'master')) {
-            return redirect()->route('admin.dashboard')->with('error', 'Vous n\'avez pas la permission d\'effectuer cette action.');
-        }
-
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',

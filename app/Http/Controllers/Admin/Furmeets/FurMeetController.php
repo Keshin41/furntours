@@ -13,14 +13,8 @@ class FurMeetController extends Controller
     /**
      * Show the form for creating a new FurMeet.
      */
-    public function create(Request $request)
+    public function create()
     {
-        $user = $request->user();
-
-        if (!$user || !$user->hasPermission('manage_furmeets')) {
-            return redirect()->route('admin.furmeets.index')->with('error', 'Vous n\'avez pas la permission de créer un FurMeet.');
-        }
-
         return Inertia::render('Admin/Furmeets/CreateFurmeet');
     }
 
@@ -29,20 +23,10 @@ class FurMeetController extends Controller
      */
     public function store(Request $request)
     {
-        $user = $request->user();
-
-        if (!$user || !$user->hasPermission('manage_furmeets')) {
-            return redirect()->route('admin.furmeets.index')->with('error', 'Vous n\'avez pas la permission de créer un FurMeet.');
-        }
-
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'date' => 'required|date',
             'description' => 'required|string',
-            'category' => 'nullable|string|max:255',
-            'location' => 'nullable|string|max:500',
-            'map_embed_url' => 'nullable|string',
-            'image_url' => 'nullable|url|max:255',
             'is_published' => 'boolean',
         ]);
 
@@ -66,14 +50,8 @@ class FurMeetController extends Controller
     /**
      * Show the form for editing the specified FurMeet.
      */
-    public function edit(Request $request, FurMeet $furMeet)
+    public function edit(FurMeet $furMeet)
     {
-        $user = $request->user();
-
-        if (!$user || !$user->hasPermission('manage_furmeets')) {
-            return redirect()->route('admin.furmeets.index')->with('error', 'Vous n\'avez pas la permission de modifier ce FurMeet.');
-        }
-
         return Inertia::render('Admin/Furmeets/EditFurmeet', [
             'furMeet' => $furMeet,
         ]);
@@ -84,12 +62,6 @@ class FurMeetController extends Controller
      */
     public function update(Request $request, FurMeet $furMeet)
     {
-        $user = $request->user();
-
-        if (!$user || !$user->hasPermission('manage_furmeets')) {
-            return redirect()->route('admin.furmeets.index')->with('error', 'Vous n\'avez pas la permission de modifier ce FurMeet.');
-        }
-
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'date' => 'required|date',
@@ -109,14 +81,8 @@ class FurMeetController extends Controller
     /**
      * Remove the specified FurMeet from storage.
      */
-    public function destroy(Request $request, FurMeet $furMeet)
+    public function destroy(FurMeet $furMeet)
     {
-        $user = $request->user();
-
-        if (!$user || !$user->hasPermission('manage_furmeets')) {
-            return redirect()->route('admin.furmeets.index')->with('error', 'Vous n\'avez pas la permission de supprimer ce FurMeet.');
-        }
-
         $furMeet->delete();
 
         return redirect()->route('admin.furmeets.index')->with('success', 'FurMeet supprimé avec succès!');

@@ -2,7 +2,7 @@
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
-import { FileText, Shield, Scale, BookOpen, Users, Activity, CheckCircle, AlertCircle } from 'lucide-vue-next';
+import { FileText, Shield, Scale, BookOpen, Users, Activity, CheckCircle, AlertCircle, Video } from 'lucide-vue-next';
 import { watch } from 'vue';
 import { useNotification } from '@/composables/useNotification';
 import NotificationContainer from '@/components/NotificationContainer.vue';
@@ -77,6 +77,13 @@ const settings: SettingCard[] = [
         icon: Activity,
         href: '/admin/statistics',
         color: 'from-yellow-500 to-amber-500'
+    },
+    {
+        title: 'Vidéo Hero',
+        description: 'Modifier la vidéo affichée en background de l\'accueil',
+        icon: Video,
+        href: '/admin/settings/hero-video',
+        color: 'from-red-500 to-pink-500'
     }
 ];
 </script>

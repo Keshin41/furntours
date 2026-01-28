@@ -57,32 +57,20 @@ class StaffController extends Controller
         $currentUser = $request->user();
         $currentUserLevel = $this->getRoleLevel($currentUser->role_level ?? 'user');
 
-        // Check if user has permission (master always has it)
-        if ($currentUser->role_level !== 'master' && !$currentUser->hasPermission('manage_users')) {
-            return redirect()->route('admin.dashboard')
-                ->with('error', 'Vous n\'avez pas les permissions pour gérer les utilisateurs.');
-        }
-
-        // Master sees everyone
-        if ($currentUserLevel === 4 || $currentUser->role_level === 'master') {
-            $staff = User::orderBy('staff_order')
-                        ->orderBy('name')
-                        ->get();
-        } else {
-            // Others see only users of equal or lower level
-            $staff = User::query()
-                ->where(function($query) use ($currentUserLevel) {
-                    foreach (['user', 'moderator', 'admin', 'master'] as $role) {
-                        if ($this->getRoleLevel($role) <= $currentUserLevel) {
-                            $query->orWhere('role_level', $role)
-                                  ->orWhereNull('role_level');
-                        }
+ 
+        $staff = User::query()
+            ->where(function($query) use ($currentUserLevel) {
+                foreach (['user', 'moderator', 'admin', 'master'] as $role) {
+                    if ($this->getRoleLevel($role) <= $currentUserLevel) {
+                        $query->orWhere('role_level', $role)
+                                ->orWhereNull('role_level');
                     }
-                })
-                ->orderBy('staff_order')
-                ->orderBy('name')
-                ->get();
-        }
+                }
+            })
+            ->orderBy('staff_order')
+            ->orderBy('name')
+            ->get();
+        
         
         $availablePermissions = [
             'manage_users' => 'Gérer les utilisateurs',
@@ -97,7 +85,7 @@ class StaffController extends Controller
         return Inertia::render('Admin/Staff/StaffList', [
             'staff' => $staff,
             'availablePermissions' => $availablePermissions,
-            'userLevel' => $currentUser->role_level === 'master' ? 'master' : ($currentUser->role_level ?? 'user'),
+            'userLevel' => $currentUser->role_level ?? 'user',
         ]);
     }
 
@@ -108,12 +96,6 @@ class StaffController extends Controller
     {
         $currentUser = $request->user();
         $currentUserLevel = $this->getRoleLevel($currentUser->role_level ?? 'user');
-
-        // Check if user has permission (master always has it)
-        if ($currentUser->role_level !== 'master' && !$currentUser->hasPermission('manage_users')) {
-            return redirect()->route('admin.staff.index')
-                ->with('error', 'Vous n\'avez pas les permissions pour créer un utilisateur.');
-        }
 
         // Get available role levels for current user (can only create users with lower level)
         $availableRoleLevels = [];
@@ -135,12 +117,6 @@ class StaffController extends Controller
     {
         $currentUser = $request->user();
         $currentUserLevel = $this->getRoleLevel($currentUser->role_level ?? 'user');
-
-        // Check if user has permission (master always has it)
-        if ($currentUser->role_level !== 'master' && !$currentUser->hasPermission('manage_users')) {
-            return redirect()->route('admin.staff.index')
-                ->with('error', 'Vous n\'avez pas les permissions pour créer un utilisateur.');
-        }
 
         $requestedLevel = $this->getRoleLevel($request->input('role_level', 'user'));
 
@@ -223,12 +199,6 @@ class StaffController extends Controller
         $currentUserLevel = $this->getRoleLevel($currentUser->role_level ?? 'user');
         $staffLevel = $this->getRoleLevel($staff->role_level ?? 'user');
 
-        // Check if user has permission (master always has it)
-        if ($currentUser->role_level !== 'master' && !$currentUser->hasPermission('manage_users')) {
-            return redirect()->route('admin.staff.index')
-                ->with('error', 'Vous n\'avez pas les permissions pour éditer les utilisateurs.');
-        }
-
         // Can only edit users with lower role level (except master can edit everyone)
         if ($currentUser->role_level !== 'master' && $staffLevel >= $currentUserLevel) {
             return redirect()->route('admin.staff.index')
@@ -263,11 +233,6 @@ class StaffController extends Controller
         $currentUserLevel = $this->getRoleLevel($currentUser->role_level ?? 'user');
         $staffLevel = $this->getRoleLevel($staff->role_level ?? 'user');
 
-        // Check if user has permission (master always has it)
-        if ($currentUser->role_level !== 'master' && !$currentUser->hasPermission('manage_users')) {
-            return redirect()->route('admin.staff.index')
-                ->with('error', 'Vous n\'avez pas les permissions pour modifier les utilisateurs.');
-        }
         $requestedLevel = $this->getRoleLevel($request->input('role_level', $staff->role_level));
 
         // Check if user can edit this staff member
@@ -284,7 +249,7 @@ class StaffController extends Controller
 
         // Ensure is_staff_visible is treated as boolean
         $request->merge([
-            'is_staff_visible' => $request->boolean('is_visible'),
+            'is_staff_visible' => $request->boolean('is_staff_visible'),
         ]);
 
         $roleRule = 'required|in:user,moderator,admin,master';
@@ -318,12 +283,13 @@ class StaffController extends Controller
 
         // Handle photo upload - only update if a new file is provided
         if ($request->hasFile('photo')) {
+            $path = $request->file('photo')->store('staff', 'public');
+            $validated['photo'] = $path;
+
             // Delete old photo
             if ($staff->photo) {
                 Storage::disk('public')->delete($staff->photo);
             }
-            $path = $request->file('photo')->store('staff', 'public');
-            $validated['photo'] = $path;
         } else {
             // Remove photo key if no new file is uploaded to preserve existing photo
             unset($validated['photo']);
@@ -367,11 +333,6 @@ class StaffController extends Controller
     {
         $currentUser = $request->user();
 
-        // Check if user has permission (master always has it)
-        if ($currentUser->role_level !== 'master' && !$currentUser->hasPermission('manage_users')) {
-            return redirect()->route('admin.staff.index')
-                ->with('error', 'Vous n\'avez pas les permissions pour supprimer les utilisateurs.');
-        }
         if ($staff->role_level === 'master') {
             return redirect()->back()->with('error', 'Impossible de supprimer le compte master.');
         }

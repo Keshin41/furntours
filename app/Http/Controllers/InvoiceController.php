@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invoice;
-use App\Models\Order;
 use App\Services\InvoiceService;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class InvoiceController extends Controller
