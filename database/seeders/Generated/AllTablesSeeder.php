@@ -38,7 +38,6 @@ class AllTablesSeeder extends Seeder
         $this->call(EventsSeeder::class);
         $this->call(FailedJobsSeeder::class);
         $this->call(FurMeetsSeeder::class);
-        $this->call(InvoicesSeeder::class);
         $this->call(JobBatchesSeeder::class);
         $this->call(JobsSeeder::class);
         $this->call(MembershipsSeeder::class);
@@ -54,5 +53,6 @@ class AllTablesSeeder extends Seeder
         $this->call(StatisticsSeeder::class);
         $this->call(StatusesSeeder::class);
         $this->call(UsersSeeder::class);
+        $this->call(InvoicesSeeder::class);
     }
 }
