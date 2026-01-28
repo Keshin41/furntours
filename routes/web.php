@@ -133,7 +133,7 @@ Route::middleware([App\Http\Middleware\AdminAuth::class, 'force.password.change'
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [App\Http\Controllers\Admin\Auth\AuthController::class, 'showLoginForm'])->name('auth.login');
     Route::post('/login', [App\Http\Controllers\Admin\Auth\AuthController::class, 'login']);
-    Route::post('/logout', [App\Http\Controllers\Admin\Auth\AuthController::class, 'logout'])->name('auth.logout');
+    Route::post('/logout', [App\Http\Controllers\Admin\Auth\AuthController::class, 'logout'])->name('auth.logout')->middleware('auth');
 });
 
 // Protected admin routes
