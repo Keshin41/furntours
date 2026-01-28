@@ -34,7 +34,7 @@ const form = useForm({
 });
 
 const submit = () => {
-  form.post('/change-password', {
+  form.post('/admin/change-password', {
     preserveScroll: true,
   });
 };

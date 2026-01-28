@@ -122,10 +122,10 @@ Route::get('contact', function () {
 
 
 // Password change routes (for forced password change)
-Route::middleware(['auth', 'force.password.change'])->group(function () {
-    Route::get('/change-password', [App\Http\Controllers\Admin\Auth\PasswordChangeController::class, 'show'])
+Route::middleware([App\Http\Middleware\AdminAuth::class, 'force.password.change'])->group(function () {
+    Route::get('/admin/change-password', [App\Http\Controllers\Admin\Auth\PasswordChangeController::class, 'show'])
         ->name('admin.auth.password.change');
-    Route::post('/change-password', [App\Http\Controllers\Admin\Auth\PasswordChangeController::class, 'change'])
+    Route::post('/admin/change-password', [App\Http\Controllers\Admin\Auth\PasswordChangeController::class, 'change'])
         ->name('admin.auth.password.change.store');
 });
 
