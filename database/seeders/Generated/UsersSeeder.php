@@ -85,7 +85,7 @@ class UsersSeeder extends Seeder
   3 => 
   array (
     'id' => 9,
-    'name' => 'Bluepaw2',
+    'name' => 'Bluepaw',
     'email' => 'blue@gmail.com',
     'role' => 'Présidente',
     'role_level' => 'moderator',
@@ -103,7 +103,7 @@ class UsersSeeder extends Seeder
     'two_factor_confirmed_at' => NULL,
     'remember_token' => 'DH7jiaz9cVTeu2lgGBaXfzbefGTpOtWwMKYlOXY7RlsC4L6mH2RNf19LSPjj',
     'created_at' => '2026-01-23 17:20:45',
-    'updated_at' => '2026-01-27 23:37:51',
+    'updated_at' => '2026-01-28 01:24:14',
   ),
   4 => 
   array (

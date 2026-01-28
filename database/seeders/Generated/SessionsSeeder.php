@@ -20,7 +20,7 @@ class SessionsSeeder extends Seeder
     'ip_address' => '127.0.0.1',
     'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0',
     'payload' => 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiR0tDZWpRajNhS29PS0s2ZW5WZkRGZnR0c0FPalJDNnBwVjJFRVZpYyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6OTtzOjk6Il9wcmV2aW91cyI7YToyOntzOjM6InVybCI7czozMzoiaHR0cDovLzEyNy4wLjAuMTo4MDAwL2FkbWluL3N0YWZmIjtzOjU6InJvdXRlIjtzOjE3OiJhZG1pbi5zdGFmZi5pbmRleCI7fX0=',
-    'last_activity' => 1769557741,
+    'last_activity' => 1769563458,
   ),
   1 => 
   array (

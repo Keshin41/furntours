@@ -42,8 +42,9 @@ class AllTablesSeeder extends Seeder
         $this->call(JobsSeeder::class);
         $this->call(MembershipsSeeder::class);
         $this->call(MigrationsSeeder::class);
-        $this->call(OrderItemsSeeder::class);
         $this->call(OrdersSeeder::class);
+        $this->call(OrderItemsSeeder::class);
+        $this->call(InvoicesSeeder::class);
         $this->call(PasswordResetTokensSeeder::class);
         $this->call(PaymentsSeeder::class);
         $this->call(ProductsSeeder::class);
@@ -53,6 +54,5 @@ class AllTablesSeeder extends Seeder
         $this->call(StatisticsSeeder::class);
         $this->call(StatusesSeeder::class);
         $this->call(UsersSeeder::class);
-        $this->call(InvoicesSeeder::class);
     }
 }
