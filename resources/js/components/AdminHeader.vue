@@ -217,7 +217,7 @@ const toggleMobile = () => {
                         <DropdownMenuTrigger as-child>
                             <button class="flex items-center gap-2 rounded-full hover:ring-2 hover:ring-light-blue/50 transition-all">
                                 <Avatar class="h-9 w-9 border-2 border-light-blue/40">
-                                        <AvatarImage v-if="user?.avatar" :src="user.avatar" :alt="user?.name" />
+                                        <AvatarImage v-if="user?.photo" :src="`/storage/${user.photo}`" :alt="user?.name" />
                                         <AvatarFallback class="bg-gradient-to-br from-light-blue to-cyan-500 text-[#0f172a] font-semibold">
                                             {{ userInitials }}
                                         </AvatarFallback>
