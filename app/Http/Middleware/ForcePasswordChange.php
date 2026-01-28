@@ -18,13 +18,13 @@ class ForcePasswordChange
         $user = $request->user();
 
         // Skip for password change routes
-        if ($request->is('admin/auth/password/change*') || $request->is('logout')) {
+        if ($request->is('admin/change-password') || $request->is('admin/logout')) {
             return $next($request);
         }
 
         // If user needs password change, redirect
         if ($user && $user->needsPasswordChange()) {
-            return redirect()->route('admin.auth.password.change');
+            return redirect('/admin/change-password');
         }
 
         return $next($request);
