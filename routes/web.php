@@ -142,7 +142,6 @@ Route::prefix('admin')->name('admin.')->middleware(App\Http\Middleware\AdminAuth
     
     // Profile routes
     Route::get('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'edit'])->name('profile');
-    Route::put('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
     
     // FurMeets management routes

@@ -55,7 +55,7 @@ watch(
 );
 
 const updateProfile = () => {
-    profileForm.put('/admin/profile', {
+    profileForm.post('/admin/profile', {
         preserveScroll: true,
     });
 };
@@ -84,7 +84,7 @@ const updateAvatar = () => {
 };
 
 const updatePassword = () => {
-    passwordForm.put('/admin/profile', {
+    passwordForm.post('/admin/profile', {
         preserveScroll: true,
         onSuccess: () => {
             passwordForm.reset();
