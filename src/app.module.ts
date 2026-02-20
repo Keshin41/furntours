@@ -6,7 +6,7 @@ import { AppService } from './app.service';
 import { FurmeetModule } from './furmeet/furmeet.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -16,7 +16,7 @@ import { UsersModule } from './users/users.module';
     }),
     PrismaModule,
     AuthModule,
-    UsersModule,
+    UserModule,
     FurmeetModule,
   ],
   controllers: [AppController],
