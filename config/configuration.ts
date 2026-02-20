@@ -9,7 +9,7 @@ const configuration = () => ({
   },
   jwt: {
     secret: process.env.JWT_SECRET,
-    expriationTime: process.env.JWT_EXPIRATION_TIME,
+    expirationTime: process.env.JWT_EXPIRATION_TIME,
   },
 });
 export default configuration;

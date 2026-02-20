@@ -8,8 +8,6 @@ export class PrismaService extends PrismaClient {
   constructor(configService: ConfigService) {
     const databaseUrl = configService.get<string>('database.url');
 
-    console.log('Database URL:', databaseUrl);
-
     if (!databaseUrl) {
       throw new Error('Database URL is not configured');
     }
