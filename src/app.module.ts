@@ -8,6 +8,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ContactModule } from './contact/contact.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ContactModule } from './contact/contact.module';
     UserModule,
     FurmeetModule,
     ContactModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

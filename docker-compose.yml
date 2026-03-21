@@ -21,6 +21,11 @@ services:
     command: bash -c "cd /usr/src/; npm i; npm run start:dev"
     volumes:
       - ./:/usr/src:Z
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 8025:8025
+      - 1025:1025
 
 volumes:
   furntours-db-volume:
