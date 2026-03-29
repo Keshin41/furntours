@@ -14,32 +14,67 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum Role {
+  USER
+  ADMIN
 }
 
-model Furmeet {
-  id          String   @id @default(uuid())
+model User {
+  id         String   @id @default(uuid())
+  firstname  String
+  lastname   String
+  nickname   String
+  email      String   @unique
+  password   String
+  address    String?
+  city       String?
+  postalCode String?  @map("postal_code")
+  role       Role     @default(USER)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  orders     Order[]
+
+  @@map("user")
+}
+
+enum EventType {
+  MEET
+  OTHER
+}
+
+model Event {
+  id              String      @id @default(uuid())
+  title           String
+  description     String
+  type            EventType   @default(MEET)
+  published       Boolean     @default(false)
+  opened          Boolean     @default(false)
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  eventActivities EventPart[]
+
+  @@map("event")
+}
+
+enum EventPartType {
+  BAR
+  RESTAURANT
+  ACTIVITY
+  OTHER
+}
+
+model EventPart {
+  id          String        @id @default(uuid())
+  eventId     String        @map("event_id")
   title       String
   description String
-  content     String
   date        DateTime
-  published   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
+  order       Int           @db.SmallInt
+  type        EventPartType
 
-model Member {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  event Event @relation(fields: [eventId], references: [id])
+
+  @@map("event_activity")
 }
 
 model Product {
@@ -49,6 +84,7 @@ model Product {
   basePrice   Decimal  @db.Decimal(10, 2)
   category    String?
   imageUrl    String?
+  virtual     Boolean  @default(false)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -90,12 +126,14 @@ model Sku {
   skuCode       String   @unique @map("sku_code")
   priceOverride Decimal? @map("price_override") @db.Decimal(10, 2)
   stock         Int      @default(0)
+  trackStock    Boolean  @default(true) @map("track_stock")
   imageUrl      String?  @map("image_url")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  product Product          @relation(fields: [productId], references: [id])
-  options SkuOptionValue[]
+  product    Product          @relation(fields: [productId], references: [id])
+  options    SkuOptionValue[]
+  orderItems OrderItem[]
 
   @@map("sku")
 }
@@ -109,6 +147,38 @@ model SkuOptionValue {
 
   @@id([skuId, optionValueId])
   @@map("sku_option_value")
+}
+
+enum OrderStatus {
+  PAID
+  CANCELLED
+  CASH_PENDING
+}
+
+model Order {
+  id        String      @id @default(uuid())
+  userId    String      @map("user_id")
+  status    OrderStatus @default(PAID)
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  user       User        @relation(fields: [userId], references: [id])
+  orderItems OrderItem[]
+
+  @@map("order")
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String  @map("order_id")
+  skuId     String  @map("sku_id")
+  quantity  Int     @db.SmallInt
+  unitPrice Decimal @db.Decimal(10, 2)
+
+  order Order @relation(fields: [orderId], references: [id])
+  sku   Sku   @relation(fields: [skuId], references: [id])
+
+  @@map("order_item")
 }
 
 model Announcement {
