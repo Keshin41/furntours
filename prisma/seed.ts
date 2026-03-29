@@ -1,5 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from 'src/generated/prisma/client';
+import { PrismaClient } from '../src/generated/prisma/client';
+
 const adapter = new PrismaPg({
   connectionString: process.env['POSTGRES_URL'],
 });
@@ -14,6 +15,19 @@ async function main() {
       email: 'vgorgeon@gmail.com',
       name: 'Vikari',
       password: 'truc',
+    },
+  });
+  const internat = await prisma.product.upsert({
+    where: {
+      id: 'internat-1',
+    },
+    update: {},
+    create: {
+      id: 'internat-1',
+      name: 'Internat',
+      description: "Interna pour l'asso Furry",
+      basePrice: 45,
+      category: 'INTERNAT',
     },
   });
   const meetup = await prisma.furmeet.create({
@@ -45,9 +59,9 @@ async function main() {
   const announcement = await prisma.announcement.upsert({
     where: { id: 'default-announcement' },
     update: {
-      title: 'Ouverture des inscriptions pour l\'Internat 2026 !',
+      title: "Ouverture des inscriptions pour l'Internat 2026 !",
       message:
-        'Vous pouvez dès à présent vous inscrire pour l\'Internat 2026, qui se déroulera du 1er au 3 août. Ne manquez pas cette occasion de vivre une expérience inoubliable avec la communauté furry !',
+        "Vous pouvez dès à présent vous inscrire pour l'Internat 2026, qui se déroulera du 1er au 3 août. Ne manquez pas cette occasion de vivre une expérience inoubliable avec la communauté furry !",
       active: true,
       actionLabel: 'Boutique',
       actionUrl: '/about',
@@ -55,9 +69,9 @@ async function main() {
     },
     create: {
       id: 'default-announcement',
-      title: 'Ouverture des inscriptions pour l\'Internat 2026 !',
+      title: "Ouverture des inscriptions pour l'Internat 2026 !",
       message:
-        'Vous pouvez dès à présent vous inscrire pour l\'Internat 2026, qui se déroulera du 1er au 3 août. Ne manquez pas cette occasion de vivre une expérience inoubliable avec la communauté furry !',
+        "Vous pouvez dès à présent vous inscrire pour l'Internat 2026, qui se déroulera du 1er au 3 août. Ne manquez pas cette occasion de vivre une expérience inoubliable avec la communauté furry !",
       active: true,
       actionLabel: 'Boutique',
       actionUrl: '/about',
@@ -70,7 +84,7 @@ main()
   .then(async () => {
     await prisma.$disconnect();
   })
-  .catch(async (e) => {
+  .catch(async (e: unknown) => {
     console.error(e);
     await prisma.$disconnect();
     process.exit(1);
