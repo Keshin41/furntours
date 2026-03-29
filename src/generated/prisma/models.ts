@@ -11,4 +11,5 @@
 export type * from './models/User.js'
 export type * from './models/Furmeet.js'
 export type * from './models/Member.js'
+export type * from './models/Announcement.js'
 export type * from './commonInputTypes.js'

@@ -52,3 +52,8 @@ export type Furmeet = Prisma.FurmeetModel
  * 
  */
 export type Member = Prisma.MemberModel
+/**
+ * Model Announcement
+ * 
+ */
+export type Announcement = Prisma.AnnouncementModel

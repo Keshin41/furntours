@@ -15,7 +15,17 @@ services:
     container_name: furntours-api
     image: node:25
     ports:
-      - 3001:3000
+      - "3001:3001"
+    env_file:
+      - .env
+    environment:
+      - PORT=${PORT}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_URL=${POSTGRES_URL}
     depends_on:
       - db
     command: bash -c "cd /usr/src/; npm i; npm run start:dev"
