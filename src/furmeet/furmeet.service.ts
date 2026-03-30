@@ -6,11 +6,11 @@ export class FurmeetService {
   constructor(private prisma: PrismaService) {}
 
   findAll() {
-    return this.prisma.furmeet.findMany();
+    return this.prisma.event.findMany();
   }
 
   findById(id: string) {
-    return this.prisma.furmeet.findUnique({
+    return this.prisma.event.findUnique({
       where: { id },
     });
   }

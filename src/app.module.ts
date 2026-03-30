@@ -9,6 +9,7 @@ import { LoggerMiddleware } from './logger.middleware';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { AnnouncementModule } from './announcement/announcement.module';
+import { ProductModule } from './product/product.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AnnouncementModule } from './announcement/announcement.module';
     UserModule,
     FurmeetModule,
     AnnouncementModule,
+    ProductModule,
   ],
   controllers: [AppController],
   providers: [AppService],
