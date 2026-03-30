@@ -11,7 +11,19 @@ export class ProductService {
     return this.prisma.product.findMany({
       where: whereClause,
       include: {
-        skus: true,
+        skus: {
+          include: {
+            options: {
+              include: {
+                optionValue: {
+                  include: {
+                    optionType: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         optionTypes: {
           include: {
             optionValues: true,
@@ -25,7 +37,19 @@ export class ProductService {
     return this.prisma.product.findUnique({
       where: { id },
       include: {
-        skus: true,
+        skus: {
+          include: {
+            options: {
+              include: {
+                optionValue: {
+                  include: {
+                    optionType: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         optionTypes: {
           include: {
             optionValues: true,
