@@ -14,6 +14,11 @@ const SHOP_PRODUCT_IDS = [
   'pin-1',
   'sticker-1',
 ];
+const FURMEET_EVENT_IDS = [
+  'furmeet-avril-2026',
+  'furmeet-fevrier-2026',
+  'furmeet-mars-2026',
+];
 
 async function resetShopCatalog() {
   await prisma.orderItem.deleteMany({
@@ -38,6 +43,66 @@ async function resetShopCatalog() {
 
   await prisma.product.deleteMany({
     where: { id: { in: SHOP_PRODUCT_IDS } },
+  });
+}
+
+async function resetFurmeetEvents() {
+  await prisma.eventPart.deleteMany({
+    where: {
+      eventId: {
+        in: FURMEET_EVENT_IDS,
+      },
+    },
+  });
+
+  await prisma.event.deleteMany({
+    where: {
+      id: {
+        in: FURMEET_EVENT_IDS,
+      },
+    },
+  });
+}
+
+async function createFurmeet(input: {
+  id: string;
+  title: string;
+  description: string;
+  opened: boolean;
+  published: boolean;
+  activities: Array<{
+    title: string;
+    description: string;
+    date: string;
+    order: number;
+    type: 'ACTIVITY' | 'RESTAURANT' | 'BAR' | 'OTHER';
+  }>;
+}) {
+  return prisma.event.create({
+    data: {
+      id: input.id,
+      title: input.title,
+      description: input.description,
+      type: 'MEET',
+      published: input.published,
+      opened: input.opened,
+      eventActivities: {
+        create: input.activities.map((activity) => ({
+          title: activity.title,
+          description: activity.description,
+          date: new Date(activity.date),
+          order: activity.order,
+          type: activity.type,
+        })),
+      },
+    },
+    include: {
+      eventActivities: {
+        orderBy: {
+          order: 'asc',
+        },
+      },
+    },
   });
 }
 
@@ -147,6 +212,7 @@ async function main() {
       description: "Interna pour l'asso Furry",
       basePrice: 45,
       category: 'INTERNAT',
+      virtual: true,
       optionTypes: {
         connectOrCreate: [
           {
@@ -204,11 +270,11 @@ async function main() {
       productId: internat.id,
       priceOverride: 50,
       skuCode: 'INTERNAT-1-DRAPS-OUI',
-      virtual: true,
     },
   });
 
   await resetShopCatalog();
+  await resetFurmeetEvents();
 
   const cup = await prisma.product.create({
     data: {
@@ -497,14 +563,108 @@ async function main() {
     optionValueIds: [stickerHolo.id, stickerLarge.id],
   });
 
-  const meetup = await prisma.event.create({
-    data: {
-      title: 'Furmeet 1',
-      description: 'First furmeet',
-      type: 'MEET',
-      published: true,
-      opened: true,
-    },
+  const meetup = await createFurmeet({
+    id: 'furmeet-mars-2026',
+    title: 'Meet – 14 Mars – Atelier, Jeux et Soirée',
+    description:
+      'Résumé de la journée, Nous vous proposons une journée conviviale entre membres de la communauté furry avec un atelier créatif, des jeux de société, puis une soirée restaurant et bar dans le centre de Tours.',
+    published: true,
+    opened: false,
+    activities: [
+      {
+        title: 'Atelier Créatif',
+        description:
+          'Un moment créatif pour se retrouver et partager une activité artistique ensemble dans une ambiance détendue.Des jeux seront disponibles pour passer l’après-midi ensemble, discuter et s’amuser. Cette activité se déroule au même endroit et au même moment que l’atelier pour permettre à chacun de participer librement.',
+        date: '2026-04-11T13:30:00.000Z',
+        order: 1,
+        type: 'ACTIVITY',
+      },
+      {
+        title: 'Diner au restaurant Traditoria Italiano',
+        description:
+          'Repas du soir pour continuer la rencontre dans une ambiance conviviale.',
+        date: '2026-04-11T18:45:00.000Z',
+        order: 2,
+        type: 'RESTAURANT',
+      },
+      {
+        title: 'After au Bar Shuffle Factory',
+        description:
+          'Fin de soirée autour d’un verre pour celles et ceux qui souhaitent prolonger la sortie.',
+        date: '2026-04-11T21:15:00.000Z',
+        order: 3,
+        type: 'BAR',
+      },
+    ],
+  });
+
+  const meetup2 = await createFurmeet({
+    id: 'furmeet-avril-2026',
+    title: 'Meet - Avril 2026',
+    description:
+      'Awooo les fluff, on se retrouve pour le planning de la meet du 11 Avril.Rendez-vous a 16h pour l’activité au choix.⚠️ Toutes personne non inscrite pour le resto se verra refusé !',
+    published: true,
+    opened: true,
+    activities: [
+      {
+        title: 'Mini-golf au Maxxparc',
+        description:
+          'Petite apres-midi de détente et de fun au mini-golf du Maxxparc, ouvert à tous les niveaux pour passer un bon moment ensemble.',
+        date: '2026-05-09T14:00:00.000Z',
+        order: 1,
+        type: 'ACTIVITY',
+      },
+      {
+        title: 'Restaurant Les 3 Brasseurs ',
+        description: '⚠️ Les fursuits ne sont pas autorisés au restaurant',
+        date: '2026-05-09T19:00:00.000Z',
+        order: 2,
+        type: 'RESTAURANT',
+      },
+      {
+        title: 'Suite et fin de la journée le bar',
+        description:
+          '🎲 21h30 – Bar & fun\n👉 Shuffle Factory\n 💬 N’hésitez pas à venir, que vous soyez en fursuit (hors resto) ou non !',
+        date: '2026-05-09T21:30:00.000Z',
+        order: 3,
+        type: 'BAR',
+      },
+    ],
+  });
+
+  const meetup3 = await createFurmeet({
+    id: 'furmeet-fevrier-2026',
+    title: 'Meet – Vendredi 7 février',
+    description:
+      'Venez partager une journée pleine d’aventures, de convivialité et de fun avec nous lors de notre prochaine meet ! 🐾\n Voici le programme complet de la journée:',
+    published: true,
+    opened: false,
+    activities: [
+      {
+        title: 'Escape game Prison Island Tours',
+        description:
+          'Adresse : 99 Avenue Gustave Eiffel, 37100 Tours\nDurée : 1h30\nPrix : 21,90 € / personne\n Mettez vos talents de détective et votre esprit d’équipe à l’épreuve dans ce jeu d’évasion immersif composé de nombreuses cellules à défis ! 🧩',
+        date: '2026-06-13T13:45:00.000Z',
+        order: 1,
+        type: 'ACTIVITY',
+      },
+      {
+        title: 'Diner au  Basilic & Co',
+        description:
+          'Adresse : 42 Rue Daniel Mayer, 37100 Tours\nPrix : entre 10 € et 20 € / personne\nUn moment détente autour d’un bon repas pour reprendre des forces et discuter tous ensemble 🍕',
+        date: '2026-06-13T18:30:00.000Z',
+        order: 2,
+        type: 'RESTAURANT',
+      },
+      {
+        title: 'Bar Shuffle Factory',
+        description:
+          'Adresse : 194 Avenue Maginot, 37100 Tours\n\nFinissons la soirée en beauté autour d’un verre 🍹 dans une ambiance décontractée !\n\nLe bar dispose de plusieurs activités :\n\n    Babyfoot\n    Billard\n    Jeux de fléchettes\n',
+        date: '2026-06-13T21:00:00.000Z',
+        order: 3,
+        type: 'BAR',
+      },
+    ],
   });
 
   const skuDrapsNon = await prisma.sku.upsert({
@@ -517,16 +677,6 @@ async function main() {
       productId: internat.id,
       priceOverride: 45,
       skuCode: 'INTERNAT-1-DRAPS-NON',
-    },
-  });
-
-  const meetup2 = await prisma.event.create({
-    data: {
-      title: 'Furmeet 2',
-      description: 'Second furmeet',
-      type: 'MEET',
-      published: true,
-      opened: true,
     },
   });
 
@@ -544,15 +694,6 @@ async function main() {
     },
   });
 
-  const meetup3 = await prisma.event.create({
-    data: {
-      title: 'Furmeet 3',
-      description: 'Third furmeet',
-      type: 'MEET',
-      published: true,
-      opened: true,
-    },
-  });
   const skuDrapsNonOptionValue = await prisma.skuOptionValue.upsert({
     where: {
       skuId_optionValueId: {

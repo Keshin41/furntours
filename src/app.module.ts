@@ -5,6 +5,7 @@ import { AnnouncementModule } from './announcement/announcement.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { EventModule } from './event/event.module';
 import { LoggerMiddleware } from './logger.middleware';
 import { OrderModule } from './order/order.module';
 import { PaymentModule } from './payment/payment.module';
@@ -25,6 +26,7 @@ import { UserModule } from './user/user.module';
     ProductModule,
     PaymentModule,
     OrderModule,
+    EventModule,
   ],
   controllers: [AppController],
   providers: [AppService],
