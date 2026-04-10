@@ -25,7 +25,7 @@ model User {
   lastname   String
   nickname   String
   email      String   @unique
-  password   String
+  password   String?
   address    String?
   city       String?
   postalCode String?  @map("postal_code")
@@ -151,16 +151,19 @@ model SkuOptionValue {
 
 enum OrderStatus {
   PAID
-  CANCELLED
+  PENDING
+  FAILED
   CASH_PENDING
+  CASH_PAID
 }
 
 model Order {
-  id        String      @id @default(uuid())
-  userId    String      @map("user_id")
-  status    OrderStatus @default(PAID)
-  createdAt DateTime    @default(now()) @map("created_at")
-  updatedAt DateTime    @updatedAt @map("updated_at")
+  id              String      @id @default(uuid())
+  userId          String      @map("user_id")
+  status          OrderStatus @default(PENDING)
+  paymentIntentId String?     @unique @map("payment_intent_id")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
 
   user       User        @relation(fields: [userId], references: [id])
   orderItems OrderItem[]

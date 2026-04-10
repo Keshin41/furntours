@@ -18,7 +18,7 @@ export class AuthService {
 
     const isPasswordValid: boolean = await compare(
       data.password,
-      user ? user.password : '',
+      user?.password ?? '',
     );
     if (!user || !isPasswordValid) {
       throw new UnauthorizedException();
