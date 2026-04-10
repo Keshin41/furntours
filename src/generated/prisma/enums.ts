@@ -37,8 +37,10 @@ export type EventPartType = (typeof EventPartType)[keyof typeof EventPartType]
 
 export const OrderStatus = {
   PAID: 'PAID',
-  CANCELLED: 'CANCELLED',
-  CASH_PENDING: 'CASH_PENDING'
+  PENDING: 'PENDING',
+  FAILED: 'FAILED',
+  CASH_PENDING: 'CASH_PENDING',
+  CASH_PAID: 'CASH_PAID'
 } as const
 
 export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus]

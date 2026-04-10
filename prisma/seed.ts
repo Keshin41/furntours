@@ -7,7 +7,13 @@ const adapter = new PrismaPg({
 
 const prisma = new PrismaClient({ adapter });
 
-const SHOP_PRODUCT_IDS = ['cup-1', 'tour-de-cou-1', 'tee-1', 'pin-1', 'sticker-1'];
+const SHOP_PRODUCT_IDS = [
+  'cup-1',
+  'tour-de-cou-1',
+  'tee-1',
+  'pin-1',
+  'sticker-1',
+];
 
 async function resetShopCatalog() {
   await prisma.orderItem.deleteMany({
@@ -70,10 +76,10 @@ async function main() {
     update: {},
     create: {
       email: 'vgorgeon@gmail.com',
-      firstname: 'Vikari',
-      lastname: 'Gorgeon',
       nickname: 'Vikari',
       password: 'truc',
+      firstname: 'Valentin',
+      lastname: 'Gorgeon',
     },
   });
 
@@ -96,13 +102,108 @@ async function main() {
     where: {
       id: 'internat-1',
     },
-    update: {},
+    update: {
+      id: 'internat-1',
+      name: 'Internat',
+      description: "Interna pour l'asso Furry",
+      basePrice: 45,
+      category: 'INTERNAT',
+      optionTypes: {
+        connectOrCreate: [
+          {
+            where: {
+              id: 'option-draps-1',
+            },
+            create: {
+              name: 'Option draps',
+              optionValues: {
+                connectOrCreate: [
+                  {
+                    where: {
+                      id: 'option-draps-1-oui',
+                    },
+                    create: {
+                      value: 'Oui',
+                    },
+                  },
+                  {
+                    where: {
+                      id: 'option-draps-1-non',
+                    },
+                    create: {
+                      value: 'Non',
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      },
+    },
     create: {
       id: 'internat-1',
       name: 'Internat',
       description: "Interna pour l'asso Furry",
       basePrice: 45,
       category: 'INTERNAT',
+      optionTypes: {
+        connectOrCreate: [
+          {
+            where: {
+              id: 'option-draps-1',
+            },
+            create: {
+              id: 'option-draps-1',
+              name: 'Option draps',
+              optionValues: {
+                connectOrCreate: [
+                  {
+                    where: {
+                      id: 'option-draps-1-oui',
+                    },
+                    create: {
+                      id: 'option-draps-1-oui',
+                      value: 'Oui',
+                    },
+                  },
+                  {
+                    where: {
+                      id: 'option-draps-1-non',
+                    },
+                    create: {
+                      id: 'option-draps-1-non',
+                      value: 'Non',
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      },
+    },
+    include: {
+      optionTypes: {
+        include: {
+          optionValues: true,
+        },
+      },
+    },
+  });
+
+  console.log('internat', internat);
+
+  const skuDrapsOui = await prisma.sku.upsert({
+    where: {
+      id: 'internat-1-sku-draps-oui',
+    },
+    update: {},
+    create: {
+      id: 'internat-1-sku-draps-oui',
+      productId: internat.id,
+      priceOverride: 50,
+      skuCode: 'INTERNAT-1-DRAPS-OUI',
       virtual: true,
     },
   });
@@ -124,7 +225,8 @@ async function main() {
     data: {
       id: 'tour-de-cou-1',
       name: 'Tour de cou FurN',
-      description: 'Tour de cou tissu avec logo FurN, idéal pour les conventions.',
+      description:
+        'Tour de cou tissu avec logo FurN, idéal pour les conventions.',
       basePrice: 8.0,
       category: 'ACCESSOIRE',
       imageUrl: 'https://example.com/images/tour-de-cou.png',
@@ -135,7 +237,8 @@ async function main() {
     data: {
       id: 'tee-1',
       name: 'T-shirt FurN',
-      description: 'T-shirt officiel de l’association, disponible en plusieurs tailles et visuels.',
+      description:
+        'T-shirt officiel de l’association, disponible en plusieurs tailles et visuels.',
       basePrice: 18.0,
       category: 'TEXTILE',
       imageUrl: 'https://example.com/images/tshirt-furn.png',
@@ -146,7 +249,8 @@ async function main() {
     data: {
       id: 'pin-1',
       name: 'Pins FurN',
-      description: 'Collection de pins FurN avec plusieurs designs à choisir sur la fiche produit.',
+      description:
+        'Collection de pins FurN avec plusieurs designs à choisir sur la fiche produit.',
       basePrice: 4.0,
       category: 'PIN',
       imageUrl: 'https://example.com/images/pins-furn.png',
@@ -157,7 +261,8 @@ async function main() {
     data: {
       id: 'sticker-1',
       name: 'Stickers FurN',
-      description: 'Stickers vinyl waterproof disponibles en plusieurs illustrations et formats.',
+      description:
+        'Stickers vinyl waterproof disponibles en plusieurs illustrations et formats.',
       basePrice: 2.5,
       category: 'STICKER',
       imageUrl: 'https://example.com/images/stickers-furn.png',
@@ -194,11 +299,21 @@ async function main() {
     },
   });
 
-  const teeSizeS = await prisma.optionValue.create({ data: { optionTypeId: teeSize.id, value: 'S' } });
-  const teeSizeM = await prisma.optionValue.create({ data: { optionTypeId: teeSize.id, value: 'M' } });
-  const teeSizeL = await prisma.optionValue.create({ data: { optionTypeId: teeSize.id, value: 'L' } });
-  const teeLogoBlue = await prisma.optionValue.create({ data: { optionTypeId: teeVisual.id, value: 'Logo bleu' } });
-  const teeMascot = await prisma.optionValue.create({ data: { optionTypeId: teeVisual.id, value: 'Mascotte' } });
+  const teeSizeS = await prisma.optionValue.create({
+    data: { optionTypeId: teeSize.id, value: 'S' },
+  });
+  const teeSizeM = await prisma.optionValue.create({
+    data: { optionTypeId: teeSize.id, value: 'M' },
+  });
+  const teeSizeL = await prisma.optionValue.create({
+    data: { optionTypeId: teeSize.id, value: 'L' },
+  });
+  const teeLogoBlue = await prisma.optionValue.create({
+    data: { optionTypeId: teeVisual.id, value: 'Logo bleu' },
+  });
+  const teeMascot = await prisma.optionValue.create({
+    data: { optionTypeId: teeVisual.id, value: 'Mascotte' },
+  });
 
   const teeSkuBlueS = await createSkuWithOptions({
     productId: tee.id,
@@ -261,9 +376,15 @@ async function main() {
     },
   });
 
-  const pinClassic = await prisma.optionValue.create({ data: { optionTypeId: pinType.id, value: 'Logo classique' } });
-  const pinPaw = await prisma.optionValue.create({ data: { optionTypeId: pinType.id, value: 'Patte rainbow' } });
-  const pinMoon = await prisma.optionValue.create({ data: { optionTypeId: pinType.id, value: 'Lune FurN' } });
+  const pinClassic = await prisma.optionValue.create({
+    data: { optionTypeId: pinType.id, value: 'Logo classique' },
+  });
+  const pinPaw = await prisma.optionValue.create({
+    data: { optionTypeId: pinType.id, value: 'Patte rainbow' },
+  });
+  const pinMoon = await prisma.optionValue.create({
+    data: { optionTypeId: pinType.id, value: 'Lune FurN' },
+  });
 
   const pinSkuClassic = await createSkuWithOptions({
     productId: pin.id,
@@ -306,11 +427,21 @@ async function main() {
     },
   });
 
-  const stickerLogo = await prisma.optionValue.create({ data: { optionTypeId: stickerType.id, value: 'Logo FurN' } });
-  const stickerMascot = await prisma.optionValue.create({ data: { optionTypeId: stickerType.id, value: 'Mascotte' } });
-  const stickerHolo = await prisma.optionValue.create({ data: { optionTypeId: stickerType.id, value: 'Holographique' } });
-  const stickerSmall = await prisma.optionValue.create({ data: { optionTypeId: stickerFormat.id, value: 'Petit 5 cm' } });
-  const stickerLarge = await prisma.optionValue.create({ data: { optionTypeId: stickerFormat.id, value: 'Grand 9 cm' } });
+  const stickerLogo = await prisma.optionValue.create({
+    data: { optionTypeId: stickerType.id, value: 'Logo FurN' },
+  });
+  const stickerMascot = await prisma.optionValue.create({
+    data: { optionTypeId: stickerType.id, value: 'Mascotte' },
+  });
+  const stickerHolo = await prisma.optionValue.create({
+    data: { optionTypeId: stickerType.id, value: 'Holographique' },
+  });
+  const stickerSmall = await prisma.optionValue.create({
+    data: { optionTypeId: stickerFormat.id, value: 'Petit 5 cm' },
+  });
+  const stickerLarge = await prisma.optionValue.create({
+    data: { optionTypeId: stickerFormat.id, value: 'Grand 9 cm' },
+  });
 
   const stickerSkuLogoSmall = await createSkuWithOptions({
     productId: sticker.id,
@@ -376,6 +507,19 @@ async function main() {
     },
   });
 
+  const skuDrapsNon = await prisma.sku.upsert({
+    where: {
+      id: 'internat-1-sku-draps-non',
+    },
+    update: {},
+    create: {
+      id: 'internat-1-sku-draps-non',
+      productId: internat.id,
+      priceOverride: 45,
+      skuCode: 'INTERNAT-1-DRAPS-NON',
+    },
+  });
+
   const meetup2 = await prisma.event.create({
     data: {
       title: 'Furmeet 2',
@@ -386,6 +530,20 @@ async function main() {
     },
   });
 
+  const skuDrapsOuiOptionValue = await prisma.skuOptionValue.upsert({
+    where: {
+      skuId_optionValueId: {
+        skuId: skuDrapsOui.id,
+        optionValueId: 'option-draps-1-oui',
+      },
+    },
+    update: {},
+    create: {
+      skuId: skuDrapsOui.id,
+      optionValueId: 'option-draps-1-oui',
+    },
+  });
+
   const meetup3 = await prisma.event.create({
     data: {
       title: 'Furmeet 3',
@@ -393,6 +551,19 @@ async function main() {
       type: 'MEET',
       published: true,
       opened: true,
+    },
+  });
+  const skuDrapsNonOptionValue = await prisma.skuOptionValue.upsert({
+    where: {
+      skuId_optionValueId: {
+        skuId: skuDrapsNon.id,
+        optionValueId: 'option-draps-1-non',
+      },
+    },
+    update: {},
+    create: {
+      skuId: skuDrapsNon.id,
+      optionValueId: 'option-draps-1-non',
     },
   });
 
@@ -448,6 +619,14 @@ async function main() {
     stickerSkuMascotLarge,
     stickerSkuHoloSmall,
     stickerSkuHoloLarge,
+  });
+  console.log({
+    alice,
+    internat,
+    skuDrapsOui,
+    skuDrapsNon,
+    skuDrapsOuiOptionValue,
+    skuDrapsNonOptionValue,
   });
 }
 
