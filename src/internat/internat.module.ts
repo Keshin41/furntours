@@ -1,0 +1,9 @@
+import { Module } from '@nestjs/common';
+import { InternatController } from './internat.controller';
+import { InternatService } from './internat.service';
+
+@Module({
+  controllers: [InternatController],
+  providers: [InternatService]
+})
+export class InternatModule {}
