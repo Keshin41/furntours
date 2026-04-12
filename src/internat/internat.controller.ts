@@ -8,8 +8,8 @@ export class InternatController {
 
 
   @HttpCode(HttpStatus.OK)
-  @Post('/procceed')
+  @Post('/checkout')
   async processTickets(@Body() data: any): Promise<any> {
-    this.internatService.manageTest(data);
+    this.internatService.processOrder(data);
   }
 }

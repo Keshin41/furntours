@@ -1,4 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Decimal } from '@prisma/client/runtime/client';
+import { StripeService } from 'src/payment/stripe.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 export interface TicketDTO {
@@ -12,19 +14,10 @@ export interface TicketDTO {
 
 @Injectable()
 export class InternatService {
-  constructor(private prismaService: PrismaService){}
+  constructor(private readonly prismaService: PrismaService, private readonly stripeService: StripeService){}
 
-  //todo: gestion stock
-
-  manageTest = async (data: any) => {
+  processOrder = async (data: any) => {
     const items = data.items as TicketDTO[];
-    console.log(items);
-    // creer l'order globale
-    // Pour chaque ticket
-      // Create user ou fetch
-      // creer un orderItem
-      // creer un ticket
-    //paiement
     
     const produitInternat = await this.prismaService.product.findFirst({
       where: { skus: {
@@ -46,10 +39,10 @@ export class InternatService {
       throw new HttpException('Could not find products', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    const skuInternatNoDrapNoGoodies = produitInternat.skus.find((sku) => {sku.skuCode === ''});
-    const skuInternatDrapNoGoodies = produitInternat.skus.find((sku) => {sku.skuCode === ''});
-    const skuInternatNoDrapGoodies = produitInternat.skus.find((sku) => {sku.skuCode === ''});
-    const skuInternatDrapGoodies = produitInternat.skus.find((sku) => {sku.skuCode === ''});
+    const skuInternatNoDrapNoGoodies = produitInternat.skus.find((sku) => {sku.skuCode === 'INTERNAT_2026'});
+    const skuInternatDrapNoGoodies = produitInternat.skus.find((sku) => {sku.skuCode === 'INTERNAT_2026_DRAP'});
+    const skuInternatNoDrapGoodies = produitInternat.skus.find((sku) => {sku.skuCode === 'INTERNAT_2026_GOODIES'});
+    const skuInternatDrapGoodies = produitInternat.skus.find((sku) => {sku.skuCode === 'INTERNAT_2026_DRAP_GOODIES'});
 
     if (skuInternatDrapGoodies == null || skuInternatDrapNoGoodies == null || skuInternatNoDrapGoodies == null || skuInternatNoDrapNoGoodies == null) {
       throw new HttpException('Could not find products', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -103,7 +96,6 @@ export class InternatService {
         } }
       });
 
-      // todo: Fetch adherent ()
       const userAdherent = user.orders.some(order => {
         order.orderItems.some(orderItem => {
           orderItem.sku == skuAdhesion;
@@ -136,56 +128,108 @@ export class InternatService {
         }
       })
     }
-
+    
     // Create orderIds
+    
+    const internatBasket: {name: string, unitPrice: Decimal, quantity: number}[] = [];
+    let totalPrice = new Decimal(0);
 
-    if (mapOrderItems[0].value > 0)
+    if (mapOrderItems[0].value > 0) {
+      const unitPrice = skuInternatNoDrapNoGoodies.priceOverride ?? produitInternat.basePrice;
+      const quantity = mapOrderItems[0].value;
       this.prismaService.orderItem.create({
         data: {
           orderId: order.id,
-          quantity: mapOrderItems[0].value,
+          quantity: quantity,
           skuId: skuInternatNoDrapNoGoodies.id,
-          unitPrice : skuInternatNoDrapNoGoodies.priceOverride ?? produitInternat.basePrice,
+          unitPrice : unitPrice,
         }
       });
-
-    if (mapOrderItems[1].value > 0)
+      totalPrice.plus((unitPrice).mul(quantity));
+      internatBasket.push({
+        name: 'Internat 2026',
+        unitPrice: unitPrice,
+        quantity: quantity,
+      });
+    }
+    if (mapOrderItems[1].value > 0) {
+      const unitPrice = skuInternatDrapNoGoodies.priceOverride ?? produitInternat.basePrice;
+      const quantity = mapOrderItems[1].value;
       this.prismaService.orderItem.create({
         data: {
           orderId: order.id,
-          quantity: mapOrderItems[1].value,
+          quantity: quantity,
           skuId: skuInternatDrapNoGoodies.id,
-          unitPrice : skuInternatDrapNoGoodies.priceOverride ?? produitInternat.basePrice,
+          unitPrice : unitPrice,
         }
       });
-
-    if (mapOrderItems[2].value > 0)
+      totalPrice.plus((unitPrice).mul(mapOrderItems[1].value));
+      internatBasket.push({
+        name: 'Internat 2026 | Pack drap',
+        unitPrice: unitPrice,
+        quantity: quantity,
+      });
+    }
+    if (mapOrderItems[2].value > 0) {
+      const unitPrice = skuInternatDrapGoodies.priceOverride ?? produitInternat.basePrice;
+      const quantity = mapOrderItems[2].value;
       this.prismaService.orderItem.create({
         data: {
           orderId: order.id,
-          quantity: mapOrderItems[2].value,
+          quantity: quantity,
           skuId: skuInternatDrapGoodies.id,
-          unitPrice : skuInternatDrapGoodies.priceOverride ?? produitInternat.basePrice
+          unitPrice : unitPrice,
         }
       });
-
-    if (mapOrderItems[3].value > 0)
+      totalPrice.plus((unitPrice).mul(quantity));
+      internatBasket.push({
+        name: 'Internat 2026 | Packs drap & goodies',
+        unitPrice: unitPrice,
+        quantity: quantity,
+      });
+    }
+    if (mapOrderItems[3].value > 0) {
+      const unitPrice = skuInternatNoDrapGoodies.priceOverride ?? produitInternat.basePrice;
+      const quantity = mapOrderItems[0].value;
       this.prismaService.orderItem.create({
         data: {
           orderId: order.id,
-          quantity: mapOrderItems[3].value,
+          quantity: quantity,
           skuId: skuInternatNoDrapGoodies.id,
-          unitPrice : skuInternatNoDrapGoodies.priceOverride ?? produitInternat.basePrice,
+          unitPrice : unitPrice,
         }
       });
-    if (mapOrderItems[4].value > 0)
+      totalPrice.plus((unitPrice).mul(quantity));
+      internatBasket.push({
+        name: 'Internat 2026 | Pack goodies',
+        unitPrice: unitPrice,
+        quantity: quantity,
+      });
+    }
+    if (mapOrderItems[4].value > 0) {
+      const unitPrice = skuAdhesion.priceOverride ?? skuAdhesion.product.basePrice;
+      const quantity = mapOrderItems[4].value;
       this.prismaService.orderItem.create({
         data: {
           orderId: order.id,
-          quantity: mapOrderItems[4].value,
+          quantity: quantity,
           skuId: skuAdhesion.id,
-          unitPrice : skuAdhesion.priceOverride ?? skuAdhesion.product.basePrice,
+          unitPrice : unitPrice,
         }
       });
+      totalPrice.plus((unitPrice).mul(quantity));
+      internatBasket.push({
+        name: 'Adhésion 2026',
+        unitPrice: unitPrice,
+        quantity: quantity,
+      });
+    }
+
+    const paymentIntent = await this.stripeService.createPaymentIntent(
+      totalPrice.mul(100).toNumber(),
+    );
+
+
+    return { paymentIntent, internatBasket };
   }
 }
