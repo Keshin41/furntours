@@ -14,7 +14,7 @@ import { AuthService } from './auth.service';
         return {
           secret: configService.get<string>('jwt.secret'),
           signOptions: {
-            expiresIn: configService.get<number>('jwt.expirationTime'),
+            expiresIn: configService.get('jwt.expirationTime'),
           },
         };
       },
