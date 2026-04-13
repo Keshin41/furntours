@@ -15,6 +15,16 @@ const CreateOrderSchema = z.object({
     z.object({
       skuId: z.string(),
       quantity: z.number().int().positive(),
+      ticketDetails: z
+        .object({
+          email: z.email(),
+          firstname: z.string(),
+          lastname: z.string(),
+          nickname: z.string(),
+          drap: z.boolean(),
+          goodies: z.boolean(),
+        })
+        .optional(),
     }),
   ),
 });

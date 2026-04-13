@@ -1,4 +1,4 @@
-import { Body, Controller, Headers, Post, RawBody } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post, Query, RawBody } from '@nestjs/common';
 import { PayementService } from './payment.service';
 import { StripeService } from './stripe.service';
 import { CreateOrderDto } from './types/order';
@@ -22,5 +22,10 @@ export class PaymentController {
   ) {
     const stripeEvent = this.stripeService.verifyWebhook(event, signature);
     await this.paymentService.handleStripeEvent(stripeEvent);
+  }
+
+  @Get('confirm-success')
+  async confirmSuccessfulPayment(@Query('paymentIntentId') paymentIntentId: string) {
+    return this.paymentService.confirmSuccessfulPayment(paymentIntentId);
   }
 }

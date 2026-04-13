@@ -11,12 +11,20 @@ export class StripeService {
     this.stripeClient = new Stripe(configService.get('STRIPE_SECRET_KEY', ''));
   }
 
-  async createPaymentIntent(amount: number) {
+  async createPaymentIntent(amount: number, metadata?: Record<string, string>) {
     const paymentIntent = await this.stripeClient.paymentIntents.create({
       amount,
       currency: 'eur',
+      metadata,
     });
     return paymentIntent.client_secret;
+  }
+
+  async retrievePaymentIntent(paymentIntentId: string, expandLatestCharge = false) {
+    return this.stripeClient.paymentIntents.retrieve(
+      paymentIntentId,
+      expandLatestCharge ? { expand: ['latest_charge'] } : undefined,
+    );
   }
 
   verifyWebhook(event: Buffer, signature: string): Stripe.Event {

@@ -163,113 +163,96 @@ async function main() {
     },
   });
 
-  const internat = await prisma.product.upsert({
-    where: {
-      id: 'internat-1',
-    },
-    update: {
-      id: 'internat-1',
-      name: 'Internat',
-      description: "Interna pour l'asso Furry",
-      basePrice: 45,
-      category: 'INTERNAT',
-      optionTypes: {
-        connectOrCreate: [
-          {
-            where: {
-              id: 'option-draps-1',
-            },
-            create: {
-              name: 'Option draps',
-              optionValues: {
-                connectOrCreate: [
-                  {
-                    where: {
-                      id: 'option-draps-1-oui',
-                    },
-                    create: {
-                      value: 'Oui',
-                    },
-                  },
-                  {
-                    where: {
-                      id: 'option-draps-1-non',
-                    },
-                    create: {
-                      value: 'Non',
-                    },
-                  },
-                ],
-              },
-            },
-          },
-        ],
-      },
-    },
+  // Internat products and SKUs
+  const internatProduct = await prisma.product.upsert({
+    where: { id: 'internat-2026' },
+    update: {},
     create: {
-      id: 'internat-1',
-      name: 'Internat',
-      description: "Interna pour l'asso Furry",
+      id: 'internat-2026',
+      name: 'Internat 2026',
+      description: 'Internat FurN 2026',
       basePrice: 45,
       category: 'INTERNAT',
       virtual: true,
-      optionTypes: {
-        connectOrCreate: [
-          {
-            where: {
-              id: 'option-draps-1',
-            },
-            create: {
-              id: 'option-draps-1',
-              name: 'Option draps',
-              optionValues: {
-                connectOrCreate: [
-                  {
-                    where: {
-                      id: 'option-draps-1-oui',
-                    },
-                    create: {
-                      id: 'option-draps-1-oui',
-                      value: 'Oui',
-                    },
-                  },
-                  {
-                    where: {
-                      id: 'option-draps-1-non',
-                    },
-                    create: {
-                      id: 'option-draps-1-non',
-                      value: 'Non',
-                    },
-                  },
-                ],
-              },
-            },
-          },
-        ],
-      },
-    },
-    include: {
-      optionTypes: {
-        include: {
-          optionValues: true,
-        },
-      },
     },
   });
 
-  console.log('internat', internat);
-
-  const skuDrapsOui = await prisma.sku.upsert({
-    where: {
-      id: 'internat-1-sku-draps-oui',
-    },
+  await prisma.sku.upsert({
+    where: { skuCode: 'INTERNAT_2026' },
     update: {},
     create: {
-      id: 'internat-1-sku-draps-oui',
-      productId: internat.id,
+      id: 'internat-sku-base',
+      productId: internatProduct.id,
+      skuCode: 'INTERNAT_2026',
+      priceOverride: 45,
+      stock: 100,
+      trackStock: true,
+    },
+  });
+
+  await prisma.sku.upsert({
+    where: { skuCode: 'INTERNAT_2026_DRAP' },
+    update: {},
+    create: {
+      id: 'internat-sku-drap',
+      productId: internatProduct.id,
+      skuCode: 'INTERNAT_2026_DRAP',
       priceOverride: 50,
-      skuCode: 'INTERNAT-1-DRAPS-OUI',
+      stock: 100,
+      trackStock: true,
+    },
+  });
+
+  await prisma.sku.upsert({
+    where: { skuCode: 'INTERNAT_2026_GOODIES' },
+    update: {},
+    create: {
+      id: 'internat-sku-goodies',
+      productId: internatProduct.id,
+      skuCode: 'INTERNAT_2026_GOODIES',
+      priceOverride: 55,
+      stock: 100,
+      trackStock: true,
+    },
+  });
+
+  await prisma.sku.upsert({
+    where: { skuCode: 'INTERNAT_2026_DRAP_GOODIES' },
+    update: {},
+    create: {
+      id: 'internat-sku-drap-goodies',
+      productId: internatProduct.id,
+      skuCode: 'INTERNAT_2026_DRAP_GOODIES',
+      priceOverride: 60,
+      stock: 100,
+      trackStock: true,
+    },
+  });
+
+  // Adhesion product and SKU
+  const adhesionProduct = await prisma.product.upsert({
+    where: { id: 'adhesion-2026' },
+    update: {},
+    create: {
+      id: 'adhesion-2026',
+      name: 'Adhésion FurN 2026',
+      description: 'Adhésion annuelle à FurN 2026',
+      basePrice: 10,
+      category: 'ADHESION',
+      virtual: true,
+    },
+  });
+
+  await prisma.sku.upsert({
+    where: { skuCode: 'ADHESION_2026' },
+    update: {},
+    create: {
+      id: 'adhesion-sku',
+      productId: adhesionProduct.id,
+      skuCode: 'ADHESION_2026',
+      priceOverride: 10,
+      stock: 0,
+      trackStock: false,
     },
   });
 
@@ -666,49 +649,7 @@ async function main() {
       },
     ],
   });
-
-  const skuDrapsNon = await prisma.sku.upsert({
-    where: {
-      id: 'internat-1-sku-draps-non',
-    },
-    update: {},
-    create: {
-      id: 'internat-1-sku-draps-non',
-      productId: internat.id,
-      priceOverride: 45,
-      skuCode: 'INTERNAT-1-DRAPS-NON',
-    },
-  });
-
-  const skuDrapsOuiOptionValue = await prisma.skuOptionValue.upsert({
-    where: {
-      skuId_optionValueId: {
-        skuId: skuDrapsOui.id,
-        optionValueId: 'option-draps-1-oui',
-      },
-    },
-    update: {},
-    create: {
-      skuId: skuDrapsOui.id,
-      optionValueId: 'option-draps-1-oui',
-    },
-  });
-
-  const skuDrapsNonOptionValue = await prisma.skuOptionValue.upsert({
-    where: {
-      skuId_optionValueId: {
-        skuId: skuDrapsNon.id,
-        optionValueId: 'option-draps-1-non',
-      },
-    },
-    update: {},
-    create: {
-      skuId: skuDrapsNon.id,
-      optionValueId: 'option-draps-1-non',
-    },
-  });
-
-  const announcement = await prisma.announcement.upsert({
+const announcement = await prisma.announcement.upsert({
     where: { id: 'default-announcement' },
     update: {
       title: "Ouverture des inscriptions pour l'Internat 2026 !",
@@ -737,7 +678,6 @@ async function main() {
     meetup2,
     meetup3,
     announcement,
-    internat,
     tourDeCou,
     cup,
     tee,
@@ -761,14 +701,7 @@ async function main() {
     stickerSkuHoloSmall,
     stickerSkuHoloLarge,
   });
-  console.log({
-    alice,
-    internat,
-    skuDrapsOui,
-    skuDrapsNon,
-    skuDrapsOuiOptionValue,
-    skuDrapsNonOptionValue,
-  });
+  
 }
 
 main()

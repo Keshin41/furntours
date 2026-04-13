@@ -1,6 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Decimal } from '@prisma/client/runtime/client';
-import { StripeService } from 'src/payment/stripe.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 export interface TicketDTO {
@@ -12,224 +10,108 @@ export interface TicketDTO {
   goodies: boolean;
 }
 
+export interface ValidateInternatTicketsDto {
+  items: TicketDTO[];
+}
+
+export interface InternatTicketListItem {
+  email: string;
+  firstname: string;
+  lastname: string;
+  nickname: string;
+  skuCode: string;
+  productName: string;
+  unitPrice: string;
+  drap: boolean;
+  goodies: boolean;
+}
+
 @Injectable()
 export class InternatService {
-  constructor(private readonly prismaService: PrismaService, private readonly stripeService: StripeService){}
+  constructor(private readonly prismaService: PrismaService){}
 
-  processOrder = async (data: any) => {
+  validateTickets = async (data: ValidateInternatTicketsDto) => {
     const items = data.items as TicketDTO[];
-    
-    const produitInternat = await this.prismaService.product.findFirst({
-      where: { skus: {
-        some: {
-          skuCode: 'INTERNAT_2026',
-        }
-      }},
-      include: { skus: true },
-    });
 
-    const skuAdhesion = await this.prismaService.sku.findUnique({
+    if (!Array.isArray(items) || items.length === 0) {
+      throw new HttpException('No tickets provided', HttpStatus.BAD_REQUEST);
+    }
+
+    const normalizedEmails = items.map((item) => item.email.trim().toLowerCase());
+
+    const duplicateEmails = normalizedEmails
+      .filter((email, index, emails) => emails.indexOf(email) !== index)
+      .filter((email, index, emails) => emails.indexOf(email) === index);
+
+    if (duplicateEmails.length > 0) {
+      throw new HttpException(
+        `Duplicate email(s) in request: ${duplicateEmails.join(', ')}`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const usersWithExistingInternatTicket = await this.prismaService.user.findMany({
       where: {
-        skuCode: 'ADHESION_2026',
-      },
-      include: { product: true },
-    });
-
-    if (skuAdhesion == null || produitInternat == null ) {
-      throw new HttpException('Could not find products', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    const skuInternatNoDrapNoGoodies = produitInternat.skus.find((sku) => {sku.skuCode === 'INTERNAT_2026'});
-    const skuInternatDrapNoGoodies = produitInternat.skus.find((sku) => {sku.skuCode === 'INTERNAT_2026_DRAP'});
-    const skuInternatNoDrapGoodies = produitInternat.skus.find((sku) => {sku.skuCode === 'INTERNAT_2026_GOODIES'});
-    const skuInternatDrapGoodies = produitInternat.skus.find((sku) => {sku.skuCode === 'INTERNAT_2026_DRAP_GOODIES'});
-
-    if (skuInternatDrapGoodies == null || skuInternatDrapNoGoodies == null || skuInternatNoDrapGoodies == null || skuInternatNoDrapNoGoodies == null) {
-      throw new HttpException('Could not find products', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    // Create mapOrder (for orderItems)
-    const mapOrderItems = [
-      {type: 'noDrapNoGoodies', value: 0},
-      {type: 'drapNoGoodies', value: 0},
-      {type: 'drapGoodies', value: 0},
-      {type: 'noDrapGoodies', value: 0},
-      {type: 'adhesion', value: 0},
-    ]
-
-    // Fetch buyer user
-    const buyer = await this.prismaService.user.upsert({
-      where: { email: items[0].email },
-      update: {},
-      create: {
-        email: items[0].email,
-        lastname: items[0].surname,
-        firstname: items[0].firstname,
-        nickname: items[0].nickname,
-      },
-    });
-
-    // Create Order
-    const order = await this.prismaService.order.create({
-      data: {
-        userId: buyer.id,
-      }
-    });
-
-    // For each ticketDTO
-
-    for (const item of items) {
-      // Fetch or create user
-      const user = await this.prismaService.user.upsert({
-        where: { email: item.email },
-        update: {},
-        create: {
-          email: item.email,
-          lastname: item.surname,
-          firstname: item.firstname,
-          nickname: item.nickname,
+        email: { in: normalizedEmails },
+        tickets: {
+          some: {
+            sku: {
+              skuCode: {
+                startsWith: 'INTERNAT_2026',
+              },
+            },
+          },
         },
-        include: { orders: {
-          include: { orderItems: {
-            include: { sku: true }
-          } }
-        } }
-      });
+      },
+      select: { email: true },
+    });
 
-      const userAdherent = user.orders.some(order => {
-        order.orderItems.some(orderItem => {
-          orderItem.sku == skuAdhesion;
-        })
-      })
-
-      // Fill mapOrderItem
-      if (item.drap) {
-        if (item.goodies) {
-          mapOrderItems[2].value += 1;
-        } else {
-          mapOrderItems[1].value += 1;
-        }
-      } else {
-        if (item.goodies) {
-          mapOrderItems[3].value += 1;
-        } else {
-          mapOrderItems[0].value += 1;
-        }
-      }
-      if (!userAdherent) {
-        mapOrderItems[4].value += 1;
-      }
-
-      // Create ticket
-      await this.prismaService.ticket.create({
-        data: {
-          userId: user.id,
-          skuId: item.drap ? (item.goodies ? skuInternatDrapGoodies.id : skuInternatDrapNoGoodies.id) : (item.goodies ? skuInternatNoDrapGoodies.id : skuInternatNoDrapNoGoodies.id),
-        }
-      })
-    }
-    
-    // Create orderIds
-    
-    const internatBasket: {name: string, unitPrice: Decimal, quantity: number}[] = [];
-    let totalPrice = new Decimal(0);
-
-    if (mapOrderItems[0].value > 0) {
-      const unitPrice = skuInternatNoDrapNoGoodies.priceOverride ?? produitInternat.basePrice;
-      const quantity = mapOrderItems[0].value;
-      this.prismaService.orderItem.create({
-        data: {
-          orderId: order.id,
-          quantity: quantity,
-          skuId: skuInternatNoDrapNoGoodies.id,
-          unitPrice : unitPrice,
-        }
-      });
-      totalPrice.plus((unitPrice).mul(quantity));
-      internatBasket.push({
-        name: 'Internat 2026',
-        unitPrice: unitPrice,
-        quantity: quantity,
-      });
-    }
-    if (mapOrderItems[1].value > 0) {
-      const unitPrice = skuInternatDrapNoGoodies.priceOverride ?? produitInternat.basePrice;
-      const quantity = mapOrderItems[1].value;
-      this.prismaService.orderItem.create({
-        data: {
-          orderId: order.id,
-          quantity: quantity,
-          skuId: skuInternatDrapNoGoodies.id,
-          unitPrice : unitPrice,
-        }
-      });
-      totalPrice.plus((unitPrice).mul(mapOrderItems[1].value));
-      internatBasket.push({
-        name: 'Internat 2026 | Pack drap',
-        unitPrice: unitPrice,
-        quantity: quantity,
-      });
-    }
-    if (mapOrderItems[2].value > 0) {
-      const unitPrice = skuInternatDrapGoodies.priceOverride ?? produitInternat.basePrice;
-      const quantity = mapOrderItems[2].value;
-      this.prismaService.orderItem.create({
-        data: {
-          orderId: order.id,
-          quantity: quantity,
-          skuId: skuInternatDrapGoodies.id,
-          unitPrice : unitPrice,
-        }
-      });
-      totalPrice.plus((unitPrice).mul(quantity));
-      internatBasket.push({
-        name: 'Internat 2026 | Packs drap & goodies',
-        unitPrice: unitPrice,
-        quantity: quantity,
-      });
-    }
-    if (mapOrderItems[3].value > 0) {
-      const unitPrice = skuInternatNoDrapGoodies.priceOverride ?? produitInternat.basePrice;
-      const quantity = mapOrderItems[0].value;
-      this.prismaService.orderItem.create({
-        data: {
-          orderId: order.id,
-          quantity: quantity,
-          skuId: skuInternatNoDrapGoodies.id,
-          unitPrice : unitPrice,
-        }
-      });
-      totalPrice.plus((unitPrice).mul(quantity));
-      internatBasket.push({
-        name: 'Internat 2026 | Pack goodies',
-        unitPrice: unitPrice,
-        quantity: quantity,
-      });
-    }
-    if (mapOrderItems[4].value > 0) {
-      const unitPrice = skuAdhesion.priceOverride ?? skuAdhesion.product.basePrice;
-      const quantity = mapOrderItems[4].value;
-      this.prismaService.orderItem.create({
-        data: {
-          orderId: order.id,
-          quantity: quantity,
-          skuId: skuAdhesion.id,
-          unitPrice : unitPrice,
-        }
-      });
-      totalPrice.plus((unitPrice).mul(quantity));
-      internatBasket.push({
-        name: 'Adhésion 2026',
-        unitPrice: unitPrice,
-        quantity: quantity,
-      });
+    if (usersWithExistingInternatTicket.length > 0) {
+      throw new HttpException(
+        `Email(s) already registered for internat: ${usersWithExistingInternatTicket.map((user) => user.email).join(', ')}`,
+        HttpStatus.CONFLICT,
+      );
     }
 
-    const paymentIntent = await this.stripeService.createPaymentIntent(
-      totalPrice.mul(100).toNumber(),
+    return { ok: true };
+  }
+
+  getTickets = async (): Promise<InternatTicketListItem[]> => {
+    const tickets = await this.prismaService.ticket.findMany({
+      include: {
+        user: true,
+        sku: {
+          include: {
+            product: true,
+          },
+        },
+      },
+      orderBy: [
+        { user: { lastname: 'asc' } },
+        { user: { firstname: 'asc' } },
+        { user: { email: 'asc' } },
+      ],
+    });
+
+    return tickets
+      .filter((ticket) => ticket.sku.skuCode.startsWith('INTERNAT_2026'))
+      .map((ticket) => ({
+        email: ticket.user.email,
+        firstname: ticket.user.firstname,
+        lastname: ticket.user.lastname,
+        nickname: ticket.user.nickname,
+        skuCode: ticket.sku.skuCode,
+        productName: ticket.sku.product.name,
+        unitPrice: (ticket.sku.priceOverride ?? ticket.sku.product.basePrice).toString(),
+        drap: ticket.sku.skuCode.includes('_DRAP'),
+        goodies: ticket.sku.skuCode.includes('GOODIES'),
+      }));
+  }
+
+  processOrder = async () => {
+    throw new HttpException(
+      'Deprecated endpoint. Add internat tickets to the global cart and use /checkout.',
+      HttpStatus.GONE,
     );
-
-
-    return { paymentIntent, internatBasket };
   }
 }
