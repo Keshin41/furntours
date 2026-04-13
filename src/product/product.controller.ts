@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard } from 'src/auth/auth.guard';
 import { ProductService } from './product.service';
 import type { CreateProductDto, UpdateProductDto } from './product.type';
 
@@ -18,6 +28,7 @@ export class ProductController {
     return this.productService.findById(id);
   }
 
+  @UseGuards(AuthGuard)
   @Put('/:id')
   updateById(
     @Param('id') id: string,

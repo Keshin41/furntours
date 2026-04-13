@@ -13,6 +13,7 @@ import { OrderModule } from './order/order.module';
 import { PaymentModule } from './payment/payment.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductModule } from './product/product.module';
+import { SkuModule } from './sku/sku.module';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -31,6 +32,7 @@ import { UserModule } from './user/user.module';
     EventModule,
     OptionModule,
     InternatModule,
+    SkuModule,
   ],
   controllers: [AppController],
   providers: [AppService],
