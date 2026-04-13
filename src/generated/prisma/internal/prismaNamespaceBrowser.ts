@@ -61,6 +61,7 @@ export const ModelName = {
   SkuOptionValue: 'SkuOptionValue',
   Order: 'Order',
   OrderItem: 'OrderItem',
+  Ticket: 'Ticket',
   Announcement: 'Announcement'
 } as const
 
@@ -206,6 +207,14 @@ export const OrderItemScalarFieldEnum = {
 } as const
 
 export type OrderItemScalarFieldEnum = (typeof OrderItemScalarFieldEnum)[keyof typeof OrderItemScalarFieldEnum]
+
+
+export const TicketScalarFieldEnum = {
+  userId: 'userId',
+  skuId: 'skuId'
+} as const
+
+export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum]
 
 
 export const AnnouncementScalarFieldEnum = {
