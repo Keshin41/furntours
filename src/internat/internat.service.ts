@@ -14,6 +14,11 @@ export interface ValidateInternatTicketsDto {
   items: TicketDTO[];
 }
 
+export interface ValidateInternatTicketsResult {
+  ok: true;
+  nonAdherentEmails: string[];
+}
+
 export interface InternatTicketListItem {
   email: string;
   firstname: string;
@@ -30,7 +35,59 @@ export interface InternatTicketListItem {
 export class InternatService {
   constructor(private readonly prismaService: PrismaService){}
 
-  validateTickets = async (data: ValidateInternatTicketsDto) => {
+  private async findNonAdherentEmails(emails: string[]): Promise<string[]> {
+    if (emails.length === 0) {
+      return [];
+    }
+
+    const users = await this.prismaService.user.findMany({
+      where: {
+        email: { in: emails },
+      },
+      select: {
+        email: true,
+        tickets: {
+          where: {
+            sku: {
+              skuCode: {
+                startsWith: 'ADHESION_',
+              },
+            },
+          },
+          select: {
+            skuId: true,
+          },
+        },
+        orders: {
+          where: {
+            status: 'PAID',
+            orderItems: {
+              some: {
+                sku: {
+                  skuCode: {
+                    startsWith: 'ADHESION_',
+                  },
+                },
+              },
+            },
+          },
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    const adherentEmailSet = new Set(
+      users
+        .filter((user) => user.tickets.length > 0 || user.orders.length > 0)
+        .map((user) => user.email.toLowerCase()),
+    );
+
+    return emails.filter((email) => !adherentEmailSet.has(email));
+  }
+
+  validateTickets = async (data: ValidateInternatTicketsDto): Promise<ValidateInternatTicketsResult> => {
     const items = data.items as TicketDTO[];
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -73,7 +130,12 @@ export class InternatService {
       );
     }
 
-    return { ok: true };
+    const nonAdherentEmails = await this.findNonAdherentEmails(normalizedEmails);
+
+    return {
+      ok: true,
+      nonAdherentEmails,
+    };
   }
 
   getTickets = async (): Promise<InternatTicketListItem[]> => {

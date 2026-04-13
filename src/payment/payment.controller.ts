@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Headers, Post, Query, RawBody } from '@nestjs/common';
-import { PayementService } from './payment.service';
+import { PayementService, ValidateAdhesionEmailResult } from './payment.service';
 import { StripeService } from './stripe.service';
 import { CreateOrderDto } from './types/order';
 
@@ -13,6 +13,11 @@ export class PaymentController {
   @Post('/create-payment-intent')
   createPaymentIntent(@Body() orderDto: CreateOrderDto) {
     return this.paymentService.createPayment(orderDto);
+  }
+
+  @Post('/validate-adhesion')
+  validateAdhesion(@Body() body: { email?: string }): Promise<ValidateAdhesionEmailResult> {
+    return this.paymentService.validateAdhesionEmail(body.email ?? '');
   }
 
   @Post('webhooks')

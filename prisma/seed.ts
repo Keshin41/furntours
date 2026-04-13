@@ -177,7 +177,85 @@ async function main() {
     },
   });
 
-  await prisma.sku.upsert({
+  const drapsOptionType = await prisma.optionType.upsert({
+    where: { id: 'internat-option-draps' },
+    update: {
+      productId: internatProduct.id,
+      name: 'Draps',
+    },
+    create: {
+      id: 'internat-option-draps',
+      productId: internatProduct.id,
+      name: 'Draps',
+    },
+  });
+
+  const goodiesOptionType = await prisma.optionType.upsert({
+    where: { id: 'internat-option-goodies' },
+    update: {
+      productId: internatProduct.id,
+      name: 'Goodies',
+    },
+    create: {
+      id: 'internat-option-goodies',
+      productId: internatProduct.id,
+      name: 'Goodies',
+    },
+  });
+
+  const drapsNoValue = await prisma.optionValue.upsert({
+    where: { id: 'internat-option-draps-no' },
+    update: {
+      optionTypeId: drapsOptionType.id,
+      value: 'Sans draps',
+    },
+    create: {
+      id: 'internat-option-draps-no',
+      optionTypeId: drapsOptionType.id,
+      value: 'Sans draps',
+    },
+  });
+
+  const drapsYesValue = await prisma.optionValue.upsert({
+    where: { id: 'internat-option-draps-yes' },
+    update: {
+      optionTypeId: drapsOptionType.id,
+      value: 'Draps',
+    },
+    create: {
+      id: 'internat-option-draps-yes',
+      optionTypeId: drapsOptionType.id,
+      value: 'Draps',
+    },
+  });
+
+  const goodiesNoValue = await prisma.optionValue.upsert({
+    where: { id: 'internat-option-goodies-no' },
+    update: {
+      optionTypeId: goodiesOptionType.id,
+      value: 'Sans goodies',
+    },
+    create: {
+      id: 'internat-option-goodies-no',
+      optionTypeId: goodiesOptionType.id,
+      value: 'Sans goodies',
+    },
+  });
+
+  const goodiesYesValue = await prisma.optionValue.upsert({
+    where: { id: 'internat-option-goodies-yes' },
+    update: {
+      optionTypeId: goodiesOptionType.id,
+      value: 'Goodies',
+    },
+    create: {
+      id: 'internat-option-goodies-yes',
+      optionTypeId: goodiesOptionType.id,
+      value: 'Goodies',
+    },
+  });
+
+  const internatBaseSku = await prisma.sku.upsert({
     where: { skuCode: 'INTERNAT_2026' },
     update: {},
     create: {
@@ -190,7 +268,7 @@ async function main() {
     },
   });
 
-  await prisma.sku.upsert({
+  const internatDrapSku = await prisma.sku.upsert({
     where: { skuCode: 'INTERNAT_2026_DRAP' },
     update: {},
     create: {
@@ -203,7 +281,7 @@ async function main() {
     },
   });
 
-  await prisma.sku.upsert({
+  const internatGoodiesSku = await prisma.sku.upsert({
     where: { skuCode: 'INTERNAT_2026_GOODIES' },
     update: {},
     create: {
@@ -216,7 +294,7 @@ async function main() {
     },
   });
 
-  await prisma.sku.upsert({
+  const internatDrapGoodiesSku = await prisma.sku.upsert({
     where: { skuCode: 'INTERNAT_2026_DRAP_GOODIES' },
     update: {},
     create: {
@@ -229,17 +307,69 @@ async function main() {
     },
   });
 
+  await prisma.skuOptionValue.deleteMany({
+    where: {
+      sku: {
+        productId: internatProduct.id,
+      },
+    },
+  });
+
+  await prisma.skuOptionValue.createMany({
+    data: [
+      {
+        skuId: internatBaseSku.id,
+        optionValueId: drapsNoValue.id,
+      },
+      {
+        skuId: internatBaseSku.id,
+        optionValueId: goodiesNoValue.id,
+      },
+      {
+        skuId: internatDrapSku.id,
+        optionValueId: drapsYesValue.id,
+      },
+      {
+        skuId: internatDrapSku.id,
+        optionValueId: goodiesNoValue.id,
+      },
+      {
+        skuId: internatGoodiesSku.id,
+        optionValueId: drapsNoValue.id,
+      },
+      {
+        skuId: internatGoodiesSku.id,
+        optionValueId: goodiesYesValue.id,
+      },
+      {
+        skuId: internatDrapGoodiesSku.id,
+        optionValueId: drapsYesValue.id,
+      },
+      {
+        skuId: internatDrapGoodiesSku.id,
+        optionValueId: goodiesYesValue.id,
+      },
+    ],
+    skipDuplicates: true,
+  });
+
   // Adhesion product and SKU
   const adhesionProduct = await prisma.product.upsert({
     where: { id: 'adhesion-2026' },
-    update: {},
+    update: {
+      name: 'Adhésion FurN 2026',
+      description: 'Adhésion annuelle à FurN 2026',
+      basePrice: 10,
+      category: 'ADHESION',
+      virtual: false,
+    },
     create: {
       id: 'adhesion-2026',
       name: 'Adhésion FurN 2026',
       description: 'Adhésion annuelle à FurN 2026',
       basePrice: 10,
       category: 'ADHESION',
-      virtual: true,
+      virtual: false,
     },
   });
 
@@ -700,6 +830,7 @@ const announcement = await prisma.announcement.upsert({
     stickerSkuMascotLarge,
     stickerSkuHoloSmall,
     stickerSkuHoloLarge,
+    adhesionProduct,
   });
   
 }

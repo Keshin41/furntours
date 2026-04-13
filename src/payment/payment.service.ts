@@ -39,14 +39,86 @@ export type ConfirmSuccessfulPaymentResult = {
   };
 };
 
+export type ValidateAdhesionEmailResult = {
+  ok: true;
+};
+
 @Injectable()
 export class PayementService {
   private readonly logger = new Logger(PayementService.name);
+  private static readonly ADHESION_SKU_CODE = 'ADHESION_2026';
   constructor(
     private readonly prisma: PrismaService,
     private readonly stripeService: StripeService,
     private readonly orderService: OrderService,
   ) {}
+
+  private async findNonAdherentEmails(emails: string[]): Promise<string[]> {
+    if (emails.length === 0) {
+      return [];
+    }
+
+    const users = await this.prisma.user.findMany({
+      where: {
+        email: { in: emails },
+      },
+      select: {
+        email: true,
+        tickets: {
+          where: {
+            sku: {
+              skuCode: {
+                startsWith: 'ADHESION_',
+              },
+            },
+          },
+          select: {
+            skuId: true,
+          },
+        },
+        orders: {
+          where: {
+            status: OrderStatus.PAID,
+            orderItems: {
+              some: {
+                sku: {
+                  skuCode: {
+                    startsWith: 'ADHESION_',
+                  },
+                },
+              },
+            },
+          },
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    const adherentEmailSet = new Set(
+      users
+        .filter((user) => user.tickets.length > 0 || user.orders.length > 0)
+        .map((user) => user.email.toLowerCase()),
+    );
+
+    return emails.filter((email) => !adherentEmailSet.has(email));
+  }
+
+  async validateAdhesionEmail(email: string): Promise<ValidateAdhesionEmailResult> {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      throw new BadRequestException('Email is required');
+    }
+
+    const nonAdherentEmails = await this.findNonAdherentEmails([normalizedEmail]);
+    if (nonAdherentEmails.length === 0) {
+      throw new ConflictException(`Email already registered as adherent: ${normalizedEmail}`);
+    }
+
+    return { ok: true };
+  }
 
   private buildInternatMetadata(ticketLines: TicketBasketLine[]) {
     const metadata: Record<string, string> = {
@@ -59,6 +131,22 @@ export class PayementService {
       metadata[`internatTicket${index}Firstname`] = line.ticketDetails.firstname;
       metadata[`internatTicket${index}Lastname`] = line.ticketDetails.lastname;
       metadata[`internatTicket${index}Nickname`] = line.ticketDetails.nickname;
+    });
+
+    return metadata;
+  }
+
+  private buildAdhesionMetadata(adhesionLines: TicketBasketLine[]) {
+    const metadata: Record<string, string> = {
+      adhesionLineCount: String(adhesionLines.length),
+    };
+
+    adhesionLines.forEach((line, index) => {
+      metadata[`adhesionLine${index}SkuId`] = line.skuId;
+      metadata[`adhesionLine${index}Email`] = line.ticketDetails.email;
+      metadata[`adhesionLine${index}Firstname`] = line.ticketDetails.firstname;
+      metadata[`adhesionLine${index}Lastname`] = line.ticketDetails.lastname;
+      metadata[`adhesionLine${index}Nickname`] = line.ticketDetails.nickname;
     });
 
     return metadata;
@@ -93,6 +181,57 @@ export class PayementService {
     });
   }
 
+  private extractAdhesionMetadata(paymentIntent: Stripe.PaymentIntent): TicketBasketLine[] {
+    const adhesionCount = Number(paymentIntent.metadata.adhesionLineCount ?? '0');
+
+    return Array.from({ length: adhesionCount }, (_, index) => {
+      const skuId = paymentIntent.metadata[`adhesionLine${index}SkuId`];
+      const email = paymentIntent.metadata[`adhesionLine${index}Email`];
+      const firstname = paymentIntent.metadata[`adhesionLine${index}Firstname`];
+      const lastname = paymentIntent.metadata[`adhesionLine${index}Lastname`];
+      const nickname = paymentIntent.metadata[`adhesionLine${index}Nickname`];
+
+      if (!skuId || !email || !firstname || !lastname || !nickname) {
+        throw new BadRequestException('Missing adhesion metadata in payment intent');
+      }
+
+      return {
+        skuId,
+        quantity: 1,
+        ticketDetails: {
+          email,
+          firstname,
+          lastname,
+          nickname,
+          drap: false,
+          goodies: false,
+        },
+      };
+    });
+  }
+
+  private async createTicketIfMissing(userId: string, skuId: string): Promise<boolean> {
+    const existingTicket = await this.prisma.ticket.findFirst({
+      where: {
+        userId,
+        skuId,
+      },
+    });
+
+    if (existingTicket) {
+      return false;
+    }
+
+    await this.prisma.ticket.create({
+      data: {
+        userId,
+        skuId,
+      },
+    });
+
+    return true;
+  }
+
   private async materializePaidInternatTickets(paymentIntent: Stripe.PaymentIntent) {
     const ticketLines = this.extractInternatMetadata(paymentIntent);
 
@@ -112,21 +251,105 @@ export class PayementService {
         },
       });
 
-      const existingTicket = await this.prisma.ticket.findFirst({
-        where: {
-          userId: user.id,
-          skuId: ticketLine.skuId,
+      await this.createTicketIfMissing(user.id, ticketLine.skuId);
+    }
+  }
+
+  private async materializePaidAdhesions(paymentIntent: Stripe.PaymentIntent) {
+    const order = await this.prisma.order.findUnique({
+      where: {
+        paymentIntentId: paymentIntent.id,
+      },
+      include: {
+        user: true,
+        orderItems: {
+          include: {
+            sku: true,
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new BadRequestException('Order not found for payment intent');
+    }
+
+    const adhesionOrderItems = order.orderItems.filter((orderItem) =>
+      orderItem.sku.skuCode.startsWith('ADHESION_'),
+    );
+
+    if (adhesionOrderItems.length === 0) {
+      return;
+    }
+
+    let remainingAdhesions = adhesionOrderItems.reduce(
+      (count, orderItem) => count + orderItem.quantity,
+      0,
+    );
+
+    const adhesionSkuId = adhesionOrderItems[0]?.skuId;
+    if (!adhesionSkuId) {
+      return;
+    }
+
+    const adhesionLines = this.extractAdhesionMetadata(paymentIntent);
+
+    for (const adhesionLine of adhesionLines) {
+      const user = await this.prisma.user.upsert({
+        where: { email: adhesionLine.ticketDetails.email },
+        update: {
+          firstname: adhesionLine.ticketDetails.firstname,
+          lastname: adhesionLine.ticketDetails.lastname,
+          nickname: adhesionLine.ticketDetails.nickname,
+        },
+        create: {
+          email: adhesionLine.ticketDetails.email,
+          firstname: adhesionLine.ticketDetails.firstname,
+          lastname: adhesionLine.ticketDetails.lastname,
+          nickname: adhesionLine.ticketDetails.nickname,
         },
       });
 
-      if (!existingTicket) {
-        await this.prisma.ticket.create({
-          data: {
-            userId: user.id,
-            skuId: ticketLine.skuId,
-          },
-        });
+      await this.createTicketIfMissing(user.id, adhesionLine.skuId);
+      remainingAdhesions -= adhesionLine.quantity;
+    }
+
+    const ticketLines = this.extractInternatMetadata(paymentIntent);
+    const nonAdherentEmails = await this.findNonAdherentEmails(
+      ticketLines.map((line) => line.ticketDetails.email),
+    );
+
+    for (const ticketLine of ticketLines) {
+      if (
+        remainingAdhesions <= 0 ||
+        !nonAdherentEmails.includes(ticketLine.ticketDetails.email)
+      ) {
+        continue;
       }
+
+      const user = await this.prisma.user.upsert({
+        where: { email: ticketLine.ticketDetails.email },
+        update: {
+          firstname: ticketLine.ticketDetails.firstname,
+          lastname: ticketLine.ticketDetails.lastname,
+          nickname: ticketLine.ticketDetails.nickname,
+        },
+        create: {
+          email: ticketLine.ticketDetails.email,
+          firstname: ticketLine.ticketDetails.firstname,
+          lastname: ticketLine.ticketDetails.lastname,
+          nickname: ticketLine.ticketDetails.nickname,
+        },
+      });
+
+      const created = await this.createTicketIfMissing(user.id, adhesionSkuId);
+      if (created) {
+        remainingAdhesions -= 1;
+      }
+    }
+
+    if (remainingAdhesions > 0) {
+      await this.createTicketIfMissing(order.userId, adhesionSkuId);
     }
   }
 
@@ -145,6 +368,7 @@ export class PayementService {
       OrderStatus.PAID,
     );
     await this.materializePaidInternatTickets(paymentIntent);
+    await this.materializePaidAdhesions(paymentIntent);
 
     const latestCharge =
       paymentIntent.latest_charge && typeof paymentIntent.latest_charge !== 'string'
@@ -185,6 +409,17 @@ export class PayementService {
       throw new BadRequestException('One or more SKUs not found');
     }
 
+    const unnamedAdhesionLine = orderDto.basket.find((item) => {
+      const sku = skuById.get(item.skuId);
+      return sku?.skuCode.startsWith('ADHESION_') && item.ticketDetails === undefined;
+    });
+
+    if (unnamedAdhesionLine) {
+      throw new BadRequestException(
+        'Adhesion products require firstname, lastname, nickname, and email',
+      );
+    }
+
     const ticketLines = orderDto.basket
       .filter((item): item is TicketBasketLine => item.ticketDetails !== undefined)
       .map((item) => ({
@@ -195,7 +430,17 @@ export class PayementService {
         },
       }));
 
-    const duplicateTicketEmails = ticketLines
+    const adhesionLines = ticketLines.filter((item) => {
+      const sku = skuById.get(item.skuId);
+      return sku?.skuCode.startsWith('ADHESION_') ?? false;
+    });
+
+    const internatTicketLines = ticketLines.filter((item) => {
+      const sku = skuById.get(item.skuId);
+      return sku?.skuCode.startsWith('INTERNAT_2026') ?? false;
+    });
+
+    const duplicateTicketEmails = internatTicketLines
       .map((item) => item.ticketDetails.email)
       .filter((email, index, emails) => emails.indexOf(email) !== index)
       .filter((email, index, emails) => emails.indexOf(email) === index);
@@ -206,7 +451,18 @@ export class PayementService {
       );
     }
 
-    for (const item of ticketLines) {
+    const duplicateAdhesionEmails = adhesionLines
+      .map((item) => item.ticketDetails.email)
+      .filter((email, index, emails) => emails.indexOf(email) !== index)
+      .filter((email, index, emails) => emails.indexOf(email) === index);
+
+    if (duplicateAdhesionEmails.length > 0) {
+      throw new BadRequestException(
+        `Duplicate adhesion email(s): ${duplicateAdhesionEmails.join(', ')}`,
+      );
+    }
+
+    for (const item of internatTicketLines) {
       if (item.quantity !== 1) {
         throw new BadRequestException('Internat tickets must have a quantity of 1 per line');
       }
@@ -217,10 +473,21 @@ export class PayementService {
       }
     }
 
-    if (ticketLines.length > 0) {
+    for (const item of adhesionLines) {
+      if (item.quantity !== 1) {
+        throw new BadRequestException('Adhesion lines must have a quantity of 1 per line');
+      }
+
+      const sku = skuById.get(item.skuId);
+      if (!sku || !sku.skuCode.startsWith('ADHESION_')) {
+        throw new BadRequestException('Invalid SKU for adhesion line');
+      }
+    }
+
+    if (internatTicketLines.length > 0) {
       const usersWithExistingTicket = await this.prisma.user.findMany({
         where: {
-          email: { in: ticketLines.map((item) => item.ticketDetails.email) },
+          email: { in: internatTicketLines.map((item) => item.ticketDetails.email) },
           tickets: {
             some: {
               sku: {
@@ -241,6 +508,52 @@ export class PayementService {
       }
     }
 
+    if (adhesionLines.length > 0) {
+      const adhesionEmails = adhesionLines.map((item) => item.ticketDetails.email);
+      const nonAdherentAdhesionEmails = await this.findNonAdherentEmails(adhesionEmails);
+      const alreadyAdherentEmails = adhesionEmails.filter(
+        (email, index, emails) =>
+          !nonAdherentAdhesionEmails.includes(email) && emails.indexOf(email) === index,
+      );
+
+      if (alreadyAdherentEmails.length > 0) {
+        throw new ConflictException(
+          `Email(s) already registered as adherent: ${alreadyAdherentEmails.join(', ')}`,
+        );
+      }
+    }
+
+    const internatEmails = internatTicketLines.map((item) => item.ticketDetails.email);
+    const nonAdherentEmails = await this.findNonAdherentEmails(internatEmails);
+
+    const adhesionSku = await this.prisma.sku.findUnique({
+      where: {
+        skuCode: PayementService.ADHESION_SKU_CODE,
+      },
+      include: {
+        product: true,
+      },
+    });
+
+    if (nonAdherentEmails.length > 0 && !adhesionSku) {
+      throw new InternalServerErrorException(
+        `Required SKU ${PayementService.ADHESION_SKU_CODE} not found`,
+      );
+    }
+
+    const adhesionQuantityAlreadyInBasket = orderDto.basket.reduce((count, basketItem) => {
+      const sku = skuById.get(basketItem.skuId);
+      if (sku?.skuCode === PayementService.ADHESION_SKU_CODE) {
+        return count + basketItem.quantity;
+      }
+      return count;
+    }, 0);
+
+    const adhesionQuantityToAdd = Math.max(
+      nonAdherentEmails.length - adhesionQuantityAlreadyInBasket,
+      0,
+    );
+
     const totalAmount = orderDto.basket.reduce((total, item) => {
       const sku = skuById.get(item.skuId);
       if (!sku) {
@@ -250,9 +563,21 @@ export class PayementService {
       return price.mul(item.quantity).plus(total);
     }, new Decimal(0));
 
+    const totalAmountWithAdhesion =
+      adhesionQuantityToAdd > 0 && adhesionSku
+        ? totalAmount.plus(
+            (adhesionSku.priceOverride ?? adhesionSku.product.basePrice).mul(
+              adhesionQuantityToAdd,
+            ),
+          )
+        : totalAmount;
+
     const paymentIntent = await this.stripeService.createPaymentIntent(
-      totalAmount.mul(100).toNumber(),
-      this.buildInternatMetadata(ticketLines),
+      totalAmountWithAdhesion.mul(100).toNumber(),
+      {
+        ...this.buildInternatMetadata(internatTicketLines),
+        ...this.buildAdhesionMetadata(adhesionLines),
+      },
     );
 
     if (!paymentIntent) {
@@ -296,6 +621,14 @@ export class PayementService {
       };
     });
 
+    if (adhesionQuantityToAdd > 0 && adhesionSku) {
+      orderItemsData.push({
+        skuId: adhesionSku.id,
+        quantity: adhesionQuantityToAdd,
+        unitPrice: adhesionSku.priceOverride ?? adhesionSku.product.basePrice,
+      });
+    }
+
     await this.prisma.order.create({
       data: {
         userId: user.id,
@@ -322,6 +655,7 @@ export class PayementService {
           OrderStatus.PAID,
         );
         await this.materializePaidInternatTickets(paymentIntent);
+        await this.materializePaidAdhesions(paymentIntent);
         break;
       }
       case 'payment_intent.payment_failed':

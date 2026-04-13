@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { InternatService } from './internat.service';
+import { InternatService, ValidateInternatTicketsResult } from './internat.service';
 
 @Controller('internat')
 export class InternatController {
@@ -7,7 +7,7 @@ export class InternatController {
 
   @HttpCode(HttpStatus.OK)
   @Post('/validate')
-  async validateTickets(@Body() data: any): Promise<any> {
+  async validateTickets(@Body() data: any): Promise<ValidateInternatTicketsResult> {
     return this.internatService.validateTickets(data);
   }
 
