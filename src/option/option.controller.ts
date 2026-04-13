@@ -1,5 +1,13 @@
-import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
-
+import {
+  Body,
+  Controller,
+  Delete,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard } from 'src/auth/auth.guard';
 import {
   CreateOptionTypeDto,
   CreateOptionValueDto,
@@ -8,13 +16,11 @@ import {
 } from './option.dto';
 import { OptionService } from './option.service';
 
+@UseGuards(AuthGuard)
 @Controller('/option')
 export class OptionController {
   constructor(private readonly optionService: OptionService) {}
 
-  // ── Option Types ────────────────────────────────────────────────────────────
-
-  // POST /product/:productId/option-type
   @Post('type/:productId')
   createOptionType(
     @Param('productId') productId: string,
@@ -23,21 +29,16 @@ export class OptionController {
     return this.optionService.createOptionType(productId, dto);
   }
 
-  // PUT /option-type/:id
   @Put('type/:id')
   updateOptionType(@Param('id') id: string, @Body() dto: UpdateOptionTypeDto) {
     return this.optionService.updateOptionType(id, dto);
   }
 
-  // DELETE /option-type/:id
   @Delete('type/:id')
   deleteOptionType(@Param('id') id: string) {
     return this.optionService.deleteOptionType(id);
   }
 
-  // ── Option Values ───────────────────────────────────────────────────────────
-
-  // POST /option-type/:optionTypeId/option-value
   @Post('value/:optionTypeId')
   createOptionValue(
     @Param('optionTypeId') optionTypeId: string,
@@ -46,7 +47,6 @@ export class OptionController {
     return this.optionService.createOptionValue(optionTypeId, dto);
   }
 
-  // PUT /option-value/:id
   @Put('value/:id')
   updateOptionValue(
     @Param('id') id: string,
@@ -55,7 +55,6 @@ export class OptionController {
     return this.optionService.updateOptionValue(id, dto);
   }
 
-  // DELETE /option-value/:id
   @Delete('value/:id')
   deleteOptionValue(@Param('id') id: string) {
     return this.optionService.deleteOptionValue(id);
