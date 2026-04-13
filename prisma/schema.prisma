@@ -169,6 +169,7 @@ model Order {
 
   user       User        @relation(fields: [userId], references: [id])
   orderItems OrderItem[]
+  ticket     Ticket[]
 
   @@map("order")
 }
@@ -189,11 +190,13 @@ model OrderItem {
 model Ticket {
   userId  String  @map("user_id")
   skuId   String  @map("sku_id")
+  orderId String  @map("order_id")
 
   user  User  @relation(fields: [userId], references: [id])
   sku   Sku   @relation(fields: [skuId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
 
-  @@id(name: "pk_tickets", fields: [userId, skuId])
+  @@id(name: "pk_tickets", fields: [userId, orderId])
   @@map("ticket")
 }
 

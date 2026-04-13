@@ -10,6 +10,6 @@ export class InternatController {
   @HttpCode(HttpStatus.OK)
   @Post('/checkout')
   async processTickets(@Body() data: any): Promise<any> {
-    this.internatService.processOrder(data);
+    return this.internatService.processOrder(data);
   }
 }
