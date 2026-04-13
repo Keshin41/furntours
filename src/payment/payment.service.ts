@@ -37,6 +37,13 @@ export type ConfirmSuccessfulPaymentResult = {
     amount: number;
     currency: string;
   };
+  orderItems: Array<{
+    productName: string;
+    skuCode: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+  }>;
 };
 
 export type ValidateAdhesionEmailResult = {
@@ -53,6 +60,13 @@ export class PayementService {
     private readonly orderService: OrderService,
   ) {}
 
+  /**
+   * Returns the subset of the given emails that do NOT yet have an adhesion.
+   * An email is considered adherent if it has either:
+   *  - a materialized Ticket linked to an ADHESION_ SKU, or
+   *  - at least one PAID order that contains an ADHESION_ line
+   *    (covers the window between payment and webhook ticket creation).
+   */
   private async findNonAdherentEmails(emails: string[]): Promise<string[]> {
     if (emails.length === 0) {
       return [];
@@ -120,6 +134,11 @@ export class PayementService {
     return { ok: true };
   }
 
+  /**
+   * Serialises internat ticket nominee data into Stripe PaymentIntent metadata.
+   * Stripe metadata values must be strings, so each field is stored as a numbered key
+   * (e.g. internatTicket0Email, internatTicket1Email, …).
+   */
   private buildInternatMetadata(ticketLines: TicketBasketLine[]) {
     const metadata: Record<string, string> = {
       internatTicketCount: String(ticketLines.length),
@@ -136,6 +155,7 @@ export class PayementService {
     return metadata;
   }
 
+  /** Same serialisation pattern as buildInternatMetadata, but for nominative adhesion lines. */
   private buildAdhesionMetadata(adhesionLines: TicketBasketLine[]) {
     const metadata: Record<string, string> = {
       adhesionLineCount: String(adhesionLines.length),
@@ -152,6 +172,7 @@ export class PayementService {
     return metadata;
   }
 
+  /** Deserialises internat ticket lines from PaymentIntent metadata (reverse of buildInternatMetadata). */
   private extractInternatMetadata(paymentIntent: Stripe.PaymentIntent): TicketBasketLine[] {
     const ticketCount = Number(paymentIntent.metadata.internatTicketCount ?? '0');
 
@@ -181,6 +202,7 @@ export class PayementService {
     });
   }
 
+  /** Deserialises adhesion lines from PaymentIntent metadata (reverse of buildAdhesionMetadata). */
   private extractAdhesionMetadata(paymentIntent: Stripe.PaymentIntent): TicketBasketLine[] {
     const adhesionCount = Number(paymentIntent.metadata.adhesionLineCount ?? '0');
 
@@ -210,6 +232,11 @@ export class PayementService {
     });
   }
 
+  /**
+   * Creates a Ticket row only if it doesn't already exist (idempotent).
+   * Returns true if a new ticket was created, false if it already existed.
+   * This makes it safe to call from both the webhook handler and the confirm endpoint.
+   */
   private async createTicketIfMissing(userId: string, skuId: string): Promise<boolean> {
     const existingTicket = await this.prisma.ticket.findFirst({
       where: {
@@ -232,6 +259,11 @@ export class PayementService {
     return true;
   }
 
+  /**
+   * After a successful payment, creates (or updates) a User record for each
+   * internat ticket nominee and attaches the corresponding Ticket.
+   * Upsert on email ensures re-running is safe and keeps user info up to date.
+   */
   private async materializePaidInternatTickets(paymentIntent: Stripe.PaymentIntent) {
     const ticketLines = this.extractInternatMetadata(paymentIntent);
 
@@ -255,6 +287,18 @@ export class PayementService {
     }
   }
 
+  /**
+   * After a successful payment, resolves and creates adhesion tickets:
+   *
+   * 1. Explicit adhesion lines — nominative lines added in the shop or auto-added
+   *    for internat participants. Each one upserts a User and creates a Ticket.
+   *
+   * 2. Implicit adhesion lines — if the basket had more adhesion qty than explicit
+   *    lines (e.g. the user bought extra), the remaining quota is assigned to any
+   *    still-non-adherent internat participant, then to the order owner as fallback.
+   *
+   * Uses `remainingAdhesions` as a counter to avoid over-assigning tickets.
+   */
   private async materializePaidAdhesions(paymentIntent: Stripe.PaymentIntent) {
     const order = await this.prisma.order.findUnique({
       where: {
@@ -353,6 +397,17 @@ export class PayementService {
     }
   }
 
+  /**
+   * Called by the frontend redirect endpoint after Stripe redirects back with ?payment=success.
+   * Responsibilities:
+   *  1. Verify the PaymentIntent actually succeeded (guard against URL manipulation).
+   *  2. Mark the corresponding Order as PAID in the DB.
+   *  3. Materialise internat tickets and adhesions from PaymentIntent metadata.
+   *  4. Return a receipt summary (charge + order lines) to display on the confirmation page.
+   *
+   * Note: the webhook handler (handleStripeEvent) also calls steps 2–3 as a fallback
+   * in case the frontend redirect never fires (closed tab, network error, etc.).
+   */
   async confirmSuccessfulPayment(paymentIntentId: string): Promise<ConfirmSuccessfulPaymentResult> {
     const paymentIntent = await this.stripeService.retrievePaymentIntent(
       paymentIntentId,
@@ -370,6 +425,28 @@ export class PayementService {
     await this.materializePaidInternatTickets(paymentIntent);
     await this.materializePaidAdhesions(paymentIntent);
 
+    const order = await this.prisma.order.findUnique({
+      where: { paymentIntentId: paymentIntent.id },
+      include: {
+        orderItems: {
+          include: {
+            sku: {
+              include: { product: true },
+            },
+          },
+        },
+      },
+    });
+
+    const orderItems =
+      order?.orderItems.map((item) => ({
+        productName: item.sku.product.name,
+        skuCode: item.sku.skuCode,
+        quantity: item.quantity,
+        unitPrice: Number(item.unitPrice),
+        totalPrice: Number(item.unitPrice) * item.quantity,
+      })) ?? [];
+
     const latestCharge =
       paymentIntent.latest_charge && typeof paymentIntent.latest_charge !== 'string'
         ? paymentIntent.latest_charge
@@ -377,6 +454,7 @@ export class PayementService {
 
     return {
       ok: true,
+      orderItems,
       paymentTicket: {
         paymentIntentId: paymentIntent.id,
         chargeId: latestCharge?.id ?? null,

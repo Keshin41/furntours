@@ -7,6 +7,9 @@ const adapter = new PrismaPg({
 
 const prisma = new PrismaClient({ adapter });
 
+// IDs of shop product groups that are fully reset on each seed run.
+// Virtual products (internat, adhesion) are NOT in this list because they
+// use upsert and preserve existing orders/tickets across re-seeds.
 const SHOP_PRODUCT_IDS = [
   'cup-1',
   'tour-de-cou-1',
@@ -20,6 +23,11 @@ const FURMEET_EVENT_IDS = [
   'furmeet-mars-2026',
 ];
 
+/**
+ * Wipes and recreates all shop product data (options, SKUs, products).
+ * Order items referencing these products are also deleted to avoid FK violations.
+ * This is safe because shop products have deterministic IDs and are fully rebuilt each time.
+ */
 async function resetShopCatalog() {
   await prisma.orderItem.deleteMany({
     where: { sku: { productId: { in: SHOP_PRODUCT_IDS } } },
@@ -46,6 +54,7 @@ async function resetShopCatalog() {
   });
 }
 
+/** Wipes and recreates furmeet events (same strategy as resetShopCatalog). */
 async function resetFurmeetEvents() {
   await prisma.eventPart.deleteMany({
     where: {
@@ -106,6 +115,11 @@ async function createFurmeet(input: {
   });
 }
 
+/**
+ * Helper: creates a SKU with its SkuOptionValue join rows in one call.
+ * `optionValueIds` links the SKU to the option values that identify it
+ * (e.g. size=S + design=Logo bleu).
+ */
 async function createSkuWithOptions(input: {
   productId: string;
   skuCode: string;
@@ -163,7 +177,11 @@ async function main() {
     },
   });
 
-  // Internat products and SKUs
+  // --- Internat 2026 ---
+  // Virtual product (not shown in the shop). Four SKU variants are created
+  // depending on the draps/goodies option combination chosen by participants.
+  // Option types and values are upserted so re-seeding is safe.
+  // SkuOptionValue rows are deleted and recreated each run to stay in sync.
   const internatProduct = await prisma.product.upsert({
     where: { id: 'internat-2026' },
     update: {},
@@ -353,7 +371,9 @@ async function main() {
     skipDuplicates: true,
   });
 
-  // Adhesion product and SKU
+  // --- Adhesion 2026 ---
+  // Non-virtual so it appears in the shop as a purchasable product.
+  // The update block is fully populated so re-seeding corrects any manual changes.
   const adhesionProduct = await prisma.product.upsert({
     where: { id: 'adhesion-2026' },
     update: {

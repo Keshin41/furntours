@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 
+// DTO representing one participant in the internat registration form.
 export interface TicketDTO {
   surname: string;
   firstname: string;
@@ -14,6 +15,9 @@ export interface ValidateInternatTicketsDto {
   items: TicketDTO[];
 }
 
+// Result returned by the validate endpoint.
+// `nonAdherentEmails` lists participants who don't yet have an adhesion
+// so the frontend can auto-add the adhesion surcharge to the cart.
 export interface ValidateInternatTicketsResult {
   ok: true;
   nonAdherentEmails: string[];
@@ -35,6 +39,15 @@ export interface InternatTicketListItem {
 export class InternatService {
   constructor(private readonly prismaService: PrismaService){}
 
+  /**
+   * Returns the subset of the given emails that do NOT yet have an adhesion.
+   * Duplicated from PaymentService intentionally: this check runs at validation
+   * time (before the cart is finalised), whereas the payment service runs it
+   * again just before charging the card.
+   * An email is considered adherent if it has either:
+   *  - a materialized Ticket on an ADHESION_ SKU, or
+   *  - at least one PAID order containing an ADHESION_ line.
+   */
   private async findNonAdherentEmails(emails: string[]): Promise<string[]> {
     if (emails.length === 0) {
       return [];
@@ -87,6 +100,14 @@ export class InternatService {
     return emails.filter((email) => !adherentEmailSet.has(email));
   }
 
+  /**
+   * Pre-payment validation for an internat ticket batch.
+   * Checks:
+   *  1. At least one ticket is provided.
+   *  2. No duplicate emails within the same request.
+   *  3. None of the emails already hold an INTERNAT_2026 ticket (double-booking guard).
+   * Returns the list of non-adherent emails so the frontend can auto-add adhesion lines.
+   */
   validateTickets = async (data: ValidateInternatTicketsDto): Promise<ValidateInternatTicketsResult> => {
     const items = data.items as TicketDTO[];
 
@@ -138,6 +159,7 @@ export class InternatService {
     };
   }
 
+  /** Returns all materialised INTERNAT_2026 tickets with participant and pricing info, sorted by name. */
   getTickets = async (): Promise<InternatTicketListItem[]> => {
     const tickets = await this.prismaService.ticket.findMany({
       include: {
@@ -170,6 +192,11 @@ export class InternatService {
       }));
   }
 
+  /**
+   * @deprecated The internat used to have its own checkout flow.
+   * It now goes through the global cart + /payment/create-payment-intent.
+   * Returns 410 Gone so old clients get a clear error.
+   */
   processOrder = async () => {
     throw new HttpException(
       'Deprecated endpoint. Add internat tickets to the global cart and use /checkout.',

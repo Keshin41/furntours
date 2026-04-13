@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { Decimal } from '@prisma/client/runtime/client';
 import { OrderStatus } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
+// Shape returned to the admin order list.
 export interface ShopOrderListItem {
   id: string;
   status: OrderStatus;
@@ -27,6 +29,7 @@ export interface ShopOrderListItem {
 export class OrderService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Returns all orders (shop products, internat tickets, adhesions, etc.), sorted by date desc. */
   async listShopOrders(): Promise<ShopOrderListItem[]> {
     const orders = await this.prisma.order.findMany({
       include: {
@@ -46,49 +49,40 @@ export class OrderService {
       },
     });
 
-    return orders
-      .map((order) => {
-        const shopItems = order.orderItems.filter(
-          (orderItem) => !orderItem.sku.product.virtual,
-        );
+    return orders.map((order) => {
+      const items = order.orderItems.map((orderItem) => ({
+        skuId: orderItem.skuId,
+        skuCode: orderItem.sku.skuCode,
+        productName: orderItem.sku.product.name,
+        quantity: orderItem.quantity,
+        unitPrice: orderItem.unitPrice.toString(),
+        totalPrice: orderItem.unitPrice.mul(orderItem.quantity).toString(),
+      }));
 
-        if (shopItems.length === 0) {
-          return null;
-        }
+      const totalPrice = order.orderItems
+        .reduce(
+          (sum, orderItem) => sum.plus(orderItem.unitPrice.mul(orderItem.quantity)),
+          new Decimal(0),
+        )
+        .toString();
 
-        const items = shopItems.map((orderItem) => ({
-          skuId: orderItem.skuId,
-          skuCode: orderItem.sku.skuCode,
-          productName: orderItem.sku.product.name,
-          quantity: orderItem.quantity,
-          unitPrice: orderItem.unitPrice.toString(),
-          totalPrice: orderItem.unitPrice.mul(orderItem.quantity).toString(),
-        }));
-
-        const totalPrice = shopItems
-          .reduce(
-            (sum, orderItem) => sum.plus(orderItem.unitPrice.mul(orderItem.quantity)),
-            shopItems[0]!.unitPrice.mul(0),
-          )
-          .toString();
-
-        return {
-          id: order.id,
-          status: order.status,
-          createdAt: order.createdAt.toISOString(),
-          buyer: {
-            email: order.user.email,
-            firstname: order.user.firstname,
-            lastname: order.user.lastname,
-            nickname: order.user.nickname,
-          },
-          items,
-          totalPrice,
-        };
-      })
-      .filter((order): order is ShopOrderListItem => order !== null);
+      return {
+        id: order.id,
+        status: order.status,
+        createdAt: order.createdAt.toISOString(),
+        buyer: {
+          email: order.user.email,
+          firstname: order.user.firstname,
+          lastname: order.user.lastname,
+          nickname: order.user.nickname,
+        },
+        items,
+        totalPrice,
+      };
+    });
   }
 
+  /** Transitions an order to a new status, looked up by its Stripe PaymentIntent ID. */
   async updateStatusByPaymentIntentId(
     paymentIntentId: string,
     status: OrderStatus,
