@@ -6,13 +6,14 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { EventModule } from './event/event.module';
+import { InternatModule } from './internat/internat.module';
 import { LoggerMiddleware } from './logger.middleware';
+import { OptionModule } from './option/option.module';
 import { OrderModule } from './order/order.module';
 import { PaymentModule } from './payment/payment.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductModule } from './product/product.module';
 import { UserModule } from './user/user.module';
-import { InternatModule } from './internat/internat.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { InternatModule } from './internat/internat.module';
     PaymentModule,
     OrderModule,
     EventModule,
+    OptionModule,
     InternatModule,
   ],
   controllers: [AppController],

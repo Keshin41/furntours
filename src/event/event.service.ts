@@ -27,7 +27,7 @@ export class EventService {
       include: EVENT_INCLUDE,
     });
 
-    if (!event || event.type !== EventType.MEET) {
+    if (event?.type !== EventType.MEET) {
       return null;
     }
 
