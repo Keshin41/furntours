@@ -13,8 +13,8 @@ import { StripeService } from './stripe.service';
 import { CreateOrderDto } from './types/order';
 
 @Injectable()
-export class PayementService {
-  private readonly logger = new Logger(PayementService.name);
+export class PaymentService {
+  private readonly logger = new Logger(PaymentService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly stripeService: StripeService,

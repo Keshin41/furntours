@@ -1,12 +1,12 @@
 import { Body, Controller, Headers, Post, RawBody } from '@nestjs/common';
-import { PayementService } from './payment.service';
+import { PaymentService } from './payment.service';
 import { StripeService } from './stripe.service';
 import { CreateOrderDto } from './types/order';
 
 @Controller('payment')
 export class PaymentController {
   constructor(
-    private readonly paymentService: PayementService,
+    private readonly paymentService: PaymentService,
     private readonly stripeService: StripeService,
   ) {}
 
