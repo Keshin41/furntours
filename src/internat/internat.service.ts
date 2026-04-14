@@ -16,6 +16,18 @@ export interface TicketDTO {
 export class InternatService {
   constructor(private readonly prismaService: PrismaService, private readonly stripeService: StripeService) { }
 
+  maxTickets = async () => {
+    const skuInternat = await this.prismaService.sku.findUnique({
+      where: {
+        skuCode: 'INTERNAT_2026',
+      }
+    });
+    if (skuInternat?.stock) {
+      const max = skuInternat.stock >= 4 ? 4 : skuInternat.stock;
+      return { max: max }
+    }
+  }
+
   processOrder = async (data: any) => {
     const items = data.items as TicketDTO[];
 
@@ -264,6 +276,21 @@ export class InternatService {
           paymentIntentId: paymentIntent,
         }
       })
+
+
+      const newStock = skuInternatNoDrapNoGoodies.stock - items.length;
+      if (newStock >= 0) {
+        await tx.sku.update({
+          where: {
+            id: skuInternatNoDrapNoGoodies.id,
+          },
+          data: {
+            stock: newStock,
+          }
+        });
+      } else {
+        throw new HttpException('Ce produit n\'est plus disponible à la vente', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
 
       return { paymentIntent, internatBasket };
     });
