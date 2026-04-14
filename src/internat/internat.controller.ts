@@ -1,4 +1,11 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+} from '@nestjs/common';
 import { InternatService } from './internat.service';
 
 @Controller('internat')
@@ -7,7 +14,7 @@ export class InternatController {
 
   @HttpCode(HttpStatus.OK)
   @Get('/maxTickets')
-  async checkStock(): Promise<any> {
+  checkStock(): Promise<any> {
     return this.internatService.maxTickets();
   }
 

@@ -11,10 +11,14 @@ export class StripeService {
     this.stripeClient = new Stripe(configService.get('STRIPE_SECRET_KEY', ''));
   }
 
-  async createPaymentIntent(amount: number) {
+  async createPaymentIntent(
+    amount: number,
+    receiptEmail: string,
+  ): Promise<string | null> {
     const paymentIntent = await this.stripeClient.paymentIntents.create({
       amount,
       currency: 'eur',
+      receipt_email: receiptEmail,
     });
     return paymentIntent.client_secret;
   }
