@@ -49,6 +49,7 @@ export class PayementService {
 
     const paymentIntent = await this.stripeService.createPaymentIntent(
       totalAmount.mul(100).toNumber(),
+      orderDto.user.email,
     );
 
     if (!paymentIntent) {
@@ -94,7 +95,7 @@ export class PayementService {
       };
     });
 
-    await this.prisma.order.create({
+    const updatedOrder = await this.prisma.order.create({
       data: {
         userId: user.id,
         paymentIntentId: paymentIntent.split('_secret')[0],
@@ -103,6 +104,7 @@ export class PayementService {
         },
       },
     });
+    await this.orderService.destockOrderItems(updatedOrder);
     console.log(
       '🚀 ~ PayementService ~ createPayment ~ paymentIntent:',
       paymentIntent,
@@ -119,12 +121,15 @@ export class PayementService {
           OrderStatus.PAID,
         );
         break;
-      case 'payment_intent.payment_failed':
-        await this.orderService.updateStatusByPaymentIntentId(
-          event.data.object.id,
-          OrderStatus.FAILED,
-        );
+      case 'payment_intent.payment_failed': {
+        const updatedOrder =
+          await this.orderService.updateStatusByPaymentIntentId(
+            event.data.object.id,
+            OrderStatus.FAILED,
+          );
+        await this.orderService.restockOrderItems(updatedOrder);
         break;
+      }
       default:
         this.logger.warn(`Unhandled Stripe event type: ${event.type}`);
     }

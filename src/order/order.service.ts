@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { OrderStatus } from 'src/generated/prisma/client';
+import { Order, OrderStatus } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ORDER_INCLUDE } from './constant';
 import { OrderWithItemsBuyer } from './order.types';
@@ -127,12 +127,56 @@ export class OrderService {
 
     return mapOrderToDetailDto(createdOrder);
   }
+  
+  async restockOrderItems(order: Order) {
+    const orderItems = await this.prisma.orderItem.findMany({
+      where: {
+        orderId: order.id,
+      },
+      include: {
+        sku: true,
+      },
+    });
+
+    for (const item of orderItems) {
+      await this.prisma.sku.update({
+        where: {
+          id: item.skuId,
+        },
+        data: {
+          stock: item.sku.stock + item.quantity,
+        },
+      });
+    }
+  }
+
+  async destockOrderItems(order: Order) {
+    const orderItems = await this.prisma.orderItem.findMany({
+      where: {
+        orderId: order.id,
+      },
+      include: {
+        sku: true,
+      },
+    });
+
+    for (const item of orderItems) {
+      await this.prisma.sku.update({
+        where: {
+          id: item.skuId,
+        },
+        data: {
+          stock: item.sku.stock - item.quantity,
+        },
+      });
+    }
+  }
 
   async updateStatusByPaymentIntentId(
     paymentIntentId: string,
     status: OrderStatus,
   ) {
-    await this.prisma.order.update({
+    return this.prisma.order.update({
       where: {
         paymentIntentId,
       },
