@@ -1,7 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/client';
+import { PAID_STATUSES } from 'src/order/order.types';
 import { StripeService } from 'src/payment/stripe.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { TicketListDto, TicketsWithUsersSkuOrder } from './internat.dto';
+import { mapTicketsToTicketListDto } from './internat.utils';
 
 export interface TicketDTO {
   surname: string;
@@ -33,8 +36,6 @@ export class InternatService {
 
   processOrder = async (data: any) => {
     const items = data.items as TicketDTO[];
-
-    console.log('data', items);
 
     const produitInternat = await this.prismaService.product.findFirst({
       where: {
@@ -213,9 +214,6 @@ export class InternatService {
           });
         }
 
-        // Create orderIds
-        console.log('map', mapOrderItems);
-
         const internatBasket: {
           name: string;
           unitPrice: Decimal;
@@ -224,7 +222,6 @@ export class InternatService {
         let totalPrice = new Decimal(0);
 
         if (mapOrderItems[0].value > 0) {
-          console.log('creer skuInternatNoDrapNoGoodies');
           const unitPrice =
             skuInternatNoDrapNoGoodies.priceOverride ??
             produitInternat.basePrice;
@@ -245,7 +242,6 @@ export class InternatService {
           });
         }
         if (mapOrderItems[1].value > 0) {
-          console.log('creer skuInternatDrapNoGoodies');
           const unitPrice =
             skuInternatDrapNoGoodies.priceOverride ?? produitInternat.basePrice;
           const quantity = mapOrderItems[1].value;
@@ -265,7 +261,6 @@ export class InternatService {
           });
         }
         if (mapOrderItems[2].value > 0) {
-          console.log('creer skuInternatDrapGoodies');
           const unitPrice =
             skuInternatDrapGoodies.priceOverride ?? produitInternat.basePrice;
           const quantity = mapOrderItems[2].value;
@@ -285,7 +280,6 @@ export class InternatService {
           });
         }
         if (mapOrderItems[3].value > 0) {
-          console.log('creer skuInternatNoDrapGoodies');
           const unitPrice =
             skuInternatNoDrapGoodies.priceOverride ?? produitInternat.basePrice;
           const quantity = mapOrderItems[3].value;
@@ -305,7 +299,6 @@ export class InternatService {
           });
         }
         if (mapOrderItems[4].value > 0) {
-          console.log('creer skuAdhesion');
           const unitPrice =
             skuAdhesion.priceOverride ?? skuAdhesion.product.basePrice;
           const quantity = mapOrderItems[4].value;
@@ -363,4 +356,22 @@ export class InternatService {
 
     return { paymentIntent: paymentIntent, basket: internatBasket };
   };
+
+  async getList(): Promise<TicketListDto[]> {
+    const tickets: TicketsWithUsersSkuOrder[] =
+      await this.prismaService.ticket.findMany({
+        include: {
+          user: true,
+          sku: true,
+          order: true,
+        },
+        where: {
+          order: {
+            status: { in: PAID_STATUSES },
+          },
+        },
+      });
+
+    return mapTicketsToTicketListDto(tickets);
+  }
 }

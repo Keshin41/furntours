@@ -1,4 +1,9 @@
-import { Prisma } from 'src/generated/prisma/client';
+import { OrderStatus, Prisma } from 'src/generated/prisma/client';
+
+export const PAID_STATUSES: OrderStatus[] = [
+  OrderStatus.CASH_PAID,
+  OrderStatus.PAID,
+];
 
 export type OrderListDto = {
   id: string;

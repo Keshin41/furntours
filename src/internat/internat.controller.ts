@@ -5,7 +5,10 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { TicketListDto } from './internat.dto';
 import { InternatService } from './internat.service';
 
 @Controller('internat')
@@ -16,6 +19,12 @@ export class InternatController {
   @Get('/maxTickets')
   checkStock(): Promise<any> {
     return this.internatService.maxTickets();
+  }
+  
+  @Get('/list')
+  @UseGuards(AuthGuard)
+  getList(): Promise<TicketListDto[]> {
+    return this.internatService.getList();
   }
 
   @HttpCode(HttpStatus.OK)
