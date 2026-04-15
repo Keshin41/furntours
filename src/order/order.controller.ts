@@ -1,6 +1,7 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { OrderService } from './order.service';
+import { OrderStatus } from 'src/generated/prisma/client';
 
 @UseGuards(AuthGuard)
 @Controller('order')
@@ -21,7 +22,15 @@ export class OrderController {
   }
 
   @Get('/:id')
-  getById() {
-    return 'This action returns a order by id';
+  getById(@Param('id') id: string) {
+    return this.orderService.findById(id);
+  }
+
+  @Patch('/:id/status')
+  updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: OrderStatus,
+  ) {
+    return this.orderService.updateStatus(id, status);
   }
 }
