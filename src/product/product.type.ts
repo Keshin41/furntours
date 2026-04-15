@@ -7,6 +7,7 @@ export type UpdateProductDto = {
   virtual: boolean;
   description?: string;
   category?: string;
+  imageUrl?: string;
 };
 
 const CreateProductSchema = z.object({
@@ -14,6 +15,7 @@ const CreateProductSchema = z.object({
   description: z.string().optional(),
   basePrice: z.string().min(1),
   category: z.string().optional(),
+  imageUrl: z.string().optional(),
   virtual: z.boolean().default(false),
 });
 

@@ -14,6 +14,9 @@ export class SkuService {
         priceOverride: dto.priceOverride,
         stock: dto.stock,
         trackStock: dto.trackStock,
+        ...(dto.imageUrl !== undefined
+          ? { imageUrl: dto.imageUrl.trim() || null }
+          : {}),
       },
     });
   }

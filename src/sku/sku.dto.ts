@@ -6,6 +6,7 @@ const UpdateSkuSchema = z.object({
   priceOverride: z.number().optional(),
   stock: z.number().int().nonnegative(),
   trackStock: z.boolean(),
+  imageUrl: z.string().optional(),
 });
 
 export class UpdateSkuDto extends createZodDto(UpdateSkuSchema) {}

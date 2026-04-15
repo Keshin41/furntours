@@ -33,6 +33,7 @@ export const mapEventToFurmeet = (
     id: event.id,
     title: event.title,
     description: event.description,
+    imageUrl: event.imageUrl,
     type: event.type,
     published: event.published,
     opened: event.opened,

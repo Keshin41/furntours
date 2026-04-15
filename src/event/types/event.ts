@@ -13,6 +13,7 @@ export type EventWithActivities = {
   id: string;
   title: string;
   description: string;
+  imageUrl: string | null;
   type: EventType;
   published: boolean;
   opened: boolean;
@@ -25,6 +26,7 @@ export type FurmeetResponse = {
   id: string;
   title: string;
   description: string;
+  imageUrl: string | null;
   type: EventType;
   published: boolean;
   opened: boolean;
