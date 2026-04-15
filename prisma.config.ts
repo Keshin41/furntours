@@ -10,6 +10,6 @@ export default defineConfig({
     seed: 'tsx prisma/seed.ts',
   },
   datasource: {
-    url: `postgres://${env('POSTGRES_USER')}:${env('POSTGRES_PASSWORD')}@127.0.0.1:${env('POSTGRES_PORT')}/${env('POSTGRES_DB')}`,
+    url: `postgres://${env('POSTGRES_USER')}:${env('POSTGRES_PASSWORD')}@${env('POSTGRES_HOST')}:${env('POSTGRES_PORT')}/${env('POSTGRES_DB')}`,
   },
 });

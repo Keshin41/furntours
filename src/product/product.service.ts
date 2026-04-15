@@ -70,6 +70,9 @@ export class ProductService {
         virtual: updateProductDto.virtual,
         description: updateProductDto.description,
         category: updateProductDto.category,
+        ...(updateProductDto.imageUrl !== undefined
+          ? { imageUrl: updateProductDto.imageUrl.trim() || null }
+          : {}),
       },
     });
   }
@@ -82,6 +85,7 @@ export class ProductService {
           description: dto.description,
           basePrice: dto.basePrice,
           category: dto.category,
+          imageUrl: dto.imageUrl?.trim() || null,
           virtual: dto.virtual,
         },
       });

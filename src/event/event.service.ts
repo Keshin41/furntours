@@ -33,4 +33,20 @@ export class EventService {
 
     return mapEventToFurmeet(event);
   }
+
+  async updateImage(id: string, imageUrl?: string) {
+    const event = await this.prisma.event.update({
+      where: { id },
+      data: {
+        imageUrl: imageUrl?.trim() || null,
+      },
+      include: EVENT_INCLUDE,
+    });
+
+    if (event.type !== EventType.MEET) {
+      return null;
+    }
+
+    return mapEventToFurmeet(event);
+  }
 }

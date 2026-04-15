@@ -1,4 +1,6 @@
 import { NestFactory } from '@nestjs/core';
+import express from 'express';
+import { join } from 'path';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { AppModule } from './app.module';
 
@@ -7,6 +9,7 @@ async function bootstrap() {
     rawBody: true,
   });
   app.enableCors();
+  app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
   app.useGlobalPipes(new ZodValidationPipe());
   const port = Number(process.env.PORT) || 3000;
   await app.listen(port, '0.0.0.0');
