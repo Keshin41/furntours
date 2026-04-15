@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { OrderStatus } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ORDER_INCLUDE } from './constant';
 import { OrderWithItemsBuyer } from './order.types';
-import { mapOrdersToOrdersListDto } from './order.utils';
+import { mapOrdersToOrdersListDto, mapOrderToDetailDto } from './order.utils';
 
 @Injectable()
 export class OrderService {
@@ -37,5 +38,26 @@ export class OrderService {
 
   async count() {
     return this.prisma.order.count();
+  }
+
+  
+  async findById(id: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      include: ORDER_INCLUDE,
+    });
+
+    if (!order) {
+      return null;
+    }
+
+    return mapOrderToDetailDto(order);
+  }
+
+  async updateStatus(id: string, status: OrderStatus) {
+    return this.prisma.order.update({
+      where: { id },
+      data: { status },
+    });
   }
 }
