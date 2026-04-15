@@ -26,7 +26,7 @@ export class InternatService {
       },
     });
     if (skuInternat?.stock) {
-      const max = Math.min(skuInternat.stock, 4);
+      const max = Math.min(skuInternat.stock, 6);
       return { max: max };
     }
   };
