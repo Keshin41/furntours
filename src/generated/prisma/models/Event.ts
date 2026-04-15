@@ -28,6 +28,7 @@ export type EventMinAggregateOutputType = {
   id: string | null
   title: string | null
   description: string | null
+  imageUrl: string | null
   type: $Enums.EventType | null
   published: boolean | null
   opened: boolean | null
@@ -39,6 +40,7 @@ export type EventMaxAggregateOutputType = {
   id: string | null
   title: string | null
   description: string | null
+  imageUrl: string | null
   type: $Enums.EventType | null
   published: boolean | null
   opened: boolean | null
@@ -50,6 +52,7 @@ export type EventCountAggregateOutputType = {
   id: number
   title: number
   description: number
+  imageUrl: number
   type: number
   published: number
   opened: number
@@ -63,6 +66,7 @@ export type EventMinAggregateInputType = {
   id?: true
   title?: true
   description?: true
+  imageUrl?: true
   type?: true
   published?: true
   opened?: true
@@ -74,6 +78,7 @@ export type EventMaxAggregateInputType = {
   id?: true
   title?: true
   description?: true
+  imageUrl?: true
   type?: true
   published?: true
   opened?: true
@@ -85,6 +90,7 @@ export type EventCountAggregateInputType = {
   id?: true
   title?: true
   description?: true
+  imageUrl?: true
   type?: true
   published?: true
   opened?: true
@@ -169,6 +175,7 @@ export type EventGroupByOutputType = {
   id: string
   title: string
   description: string
+  imageUrl: string | null
   type: $Enums.EventType
   published: boolean
   opened: boolean
@@ -201,6 +208,7 @@ export type EventWhereInput = {
   id?: Prisma.StringFilter<"Event"> | string
   title?: Prisma.StringFilter<"Event"> | string
   description?: Prisma.StringFilter<"Event"> | string
+  imageUrl?: Prisma.StringNullableFilter<"Event"> | string | null
   type?: Prisma.EnumEventTypeFilter<"Event"> | $Enums.EventType
   published?: Prisma.BoolFilter<"Event"> | boolean
   opened?: Prisma.BoolFilter<"Event"> | boolean
@@ -213,6 +221,7 @@ export type EventOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  imageUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
   published?: Prisma.SortOrder
   opened?: Prisma.SortOrder
@@ -228,6 +237,7 @@ export type EventWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.EventWhereInput | Prisma.EventWhereInput[]
   title?: Prisma.StringFilter<"Event"> | string
   description?: Prisma.StringFilter<"Event"> | string
+  imageUrl?: Prisma.StringNullableFilter<"Event"> | string | null
   type?: Prisma.EnumEventTypeFilter<"Event"> | $Enums.EventType
   published?: Prisma.BoolFilter<"Event"> | boolean
   opened?: Prisma.BoolFilter<"Event"> | boolean
@@ -240,6 +250,7 @@ export type EventOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  imageUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
   published?: Prisma.SortOrder
   opened?: Prisma.SortOrder
@@ -257,6 +268,7 @@ export type EventScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Event"> | string
   title?: Prisma.StringWithAggregatesFilter<"Event"> | string
   description?: Prisma.StringWithAggregatesFilter<"Event"> | string
+  imageUrl?: Prisma.StringNullableWithAggregatesFilter<"Event"> | string | null
   type?: Prisma.EnumEventTypeWithAggregatesFilter<"Event"> | $Enums.EventType
   published?: Prisma.BoolWithAggregatesFilter<"Event"> | boolean
   opened?: Prisma.BoolWithAggregatesFilter<"Event"> | boolean
@@ -268,6 +280,7 @@ export type EventCreateInput = {
   id?: string
   title: string
   description: string
+  imageUrl?: string | null
   type?: $Enums.EventType
   published?: boolean
   opened?: boolean
@@ -280,6 +293,7 @@ export type EventUncheckedCreateInput = {
   id?: string
   title: string
   description: string
+  imageUrl?: string | null
   type?: $Enums.EventType
   published?: boolean
   opened?: boolean
@@ -292,6 +306,7 @@ export type EventUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumEventTypeFieldUpdateOperationsInput | $Enums.EventType
   published?: Prisma.BoolFieldUpdateOperationsInput | boolean
   opened?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -304,6 +319,7 @@ export type EventUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumEventTypeFieldUpdateOperationsInput | $Enums.EventType
   published?: Prisma.BoolFieldUpdateOperationsInput | boolean
   opened?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -316,6 +332,7 @@ export type EventCreateManyInput = {
   id?: string
   title: string
   description: string
+  imageUrl?: string | null
   type?: $Enums.EventType
   published?: boolean
   opened?: boolean
@@ -327,6 +344,7 @@ export type EventUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumEventTypeFieldUpdateOperationsInput | $Enums.EventType
   published?: Prisma.BoolFieldUpdateOperationsInput | boolean
   opened?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -338,6 +356,7 @@ export type EventUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumEventTypeFieldUpdateOperationsInput | $Enums.EventType
   published?: Prisma.BoolFieldUpdateOperationsInput | boolean
   opened?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -349,6 +368,7 @@ export type EventCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  imageUrl?: Prisma.SortOrder
   type?: Prisma.SortOrder
   published?: Prisma.SortOrder
   opened?: Prisma.SortOrder
@@ -360,6 +380,7 @@ export type EventMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  imageUrl?: Prisma.SortOrder
   type?: Prisma.SortOrder
   published?: Prisma.SortOrder
   opened?: Prisma.SortOrder
@@ -371,6 +392,7 @@ export type EventMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  imageUrl?: Prisma.SortOrder
   type?: Prisma.SortOrder
   published?: Prisma.SortOrder
   opened?: Prisma.SortOrder
@@ -409,6 +431,7 @@ export type EventCreateWithoutEventActivitiesInput = {
   id?: string
   title: string
   description: string
+  imageUrl?: string | null
   type?: $Enums.EventType
   published?: boolean
   opened?: boolean
@@ -420,6 +443,7 @@ export type EventUncheckedCreateWithoutEventActivitiesInput = {
   id?: string
   title: string
   description: string
+  imageUrl?: string | null
   type?: $Enums.EventType
   published?: boolean
   opened?: boolean
@@ -447,6 +471,7 @@ export type EventUpdateWithoutEventActivitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumEventTypeFieldUpdateOperationsInput | $Enums.EventType
   published?: Prisma.BoolFieldUpdateOperationsInput | boolean
   opened?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -458,6 +483,7 @@ export type EventUncheckedUpdateWithoutEventActivitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumEventTypeFieldUpdateOperationsInput | $Enums.EventType
   published?: Prisma.BoolFieldUpdateOperationsInput | boolean
   opened?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -500,6 +526,7 @@ export type EventSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   id?: boolean
   title?: boolean
   description?: boolean
+  imageUrl?: boolean
   type?: boolean
   published?: boolean
   opened?: boolean
@@ -513,6 +540,7 @@ export type EventSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   id?: boolean
   title?: boolean
   description?: boolean
+  imageUrl?: boolean
   type?: boolean
   published?: boolean
   opened?: boolean
@@ -524,6 +552,7 @@ export type EventSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   id?: boolean
   title?: boolean
   description?: boolean
+  imageUrl?: boolean
   type?: boolean
   published?: boolean
   opened?: boolean
@@ -535,6 +564,7 @@ export type EventSelectScalar = {
   id?: boolean
   title?: boolean
   description?: boolean
+  imageUrl?: boolean
   type?: boolean
   published?: boolean
   opened?: boolean
@@ -542,7 +572,7 @@ export type EventSelectScalar = {
   updatedAt?: boolean
 }
 
-export type EventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "type" | "published" | "opened" | "createdAt" | "updatedAt", ExtArgs["result"]["event"]>
+export type EventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "imageUrl" | "type" | "published" | "opened" | "createdAt" | "updatedAt", ExtArgs["result"]["event"]>
 export type EventInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   eventActivities?: boolean | Prisma.Event$eventActivitiesArgs<ExtArgs>
   _count?: boolean | Prisma.EventCountOutputTypeDefaultArgs<ExtArgs>
@@ -559,6 +589,7 @@ export type $EventPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     id: string
     title: string
     description: string
+    imageUrl: string | null
     type: $Enums.EventType
     published: boolean
     opened: boolean
@@ -991,6 +1022,7 @@ export interface EventFieldRefs {
   readonly id: Prisma.FieldRef<"Event", 'String'>
   readonly title: Prisma.FieldRef<"Event", 'String'>
   readonly description: Prisma.FieldRef<"Event", 'String'>
+  readonly imageUrl: Prisma.FieldRef<"Event", 'String'>
   readonly type: Prisma.FieldRef<"Event", 'EventType'>
   readonly published: Prisma.FieldRef<"Event", 'Boolean'>
   readonly opened: Prisma.FieldRef<"Event", 'Boolean'>
