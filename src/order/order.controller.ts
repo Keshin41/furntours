@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { OrderService } from './order.service';
 import { OrderStatus } from 'src/generated/prisma/client';
+import { CreateManualOrderDto } from './order.dto';
 
 @UseGuards(AuthGuard)
 @Controller('order')
@@ -19,6 +20,11 @@ export class OrderController {
   @Get('/count')
   getCount() {
     return this.orderService.count();
+  }
+
+  @Post('/manual')
+  createManual(@Body() data: CreateManualOrderDto) {
+    return this.orderService.createManual(data);
   }
 
   @Get('/:id')

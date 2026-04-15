@@ -68,6 +68,11 @@ export type Order = Prisma.OrderModel
  */
 export type OrderItem = Prisma.OrderItemModel
 /**
+ * Model Ticket
+ * 
+ */
+export type Ticket = Prisma.TicketModel
+/**
  * Model Announcement
  * 
  */
