@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Order, OrderStatus } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ORDER_INCLUDE } from './constant';
@@ -139,14 +139,33 @@ export class OrderService {
     });
 
     for (const item of orderItems) {
-      await this.prisma.sku.update({
-        where: {
-          id: item.skuId,
-        },
-        data: {
-          stock: item.sku.stock + item.quantity,
-        },
-      });
+      if (item.sku.skuCode.startsWith('INTERNAT_2026')) {
+        const skuInternat = await this.prisma.sku.findUnique({
+          where: {
+            skuCode: 'INTERNAT_2026',
+          },
+        });
+        if (!skuInternat) {
+          throw new HttpException('Sku non trouvé', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        await this.prisma.sku.update({
+          where: {
+            skuCode: skuInternat.skuCode,
+          },
+          data: {
+            stock: skuInternat.stock + item.quantity,
+          },
+        });
+      } else {
+        await this.prisma.sku.update({
+          where: {
+            id: item.skuId,
+          },
+          data: {
+            stock: item.sku.stock + item.quantity,
+          },
+        });
+      }
     }
   }
 
