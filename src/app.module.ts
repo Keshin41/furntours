@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import configuration from 'config/configuration';
 import { AnnouncementModule } from './announcement/announcement.module';
 import { AppController } from './app.controller';
@@ -22,6 +23,7 @@ import { UserModule } from './user/user.module';
       isGlobal: true,
       load: [configuration],
     }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     UserModule,
