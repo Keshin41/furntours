@@ -137,9 +137,24 @@ export class InternatService {
                   },
                 },
               },
+              tickets: {
+                include: { order: true },
+              },
             },
           });
           console.log(user);
+
+          const hasTicket = user.tickets.some(
+            (ticket) =>
+              ticket.order.status === 'PAID' ||
+              ticket.order.status === 'CASH_PAID',
+          );
+          if (hasTicket) {
+            throw new HttpException(
+              "Un des participants a déjà un ticket pour l'internat",
+              HttpStatus.BAD_REQUEST,
+            );
+          }
 
           const userAdherent = user.orders.some(
             (order) =>

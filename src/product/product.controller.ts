@@ -64,7 +64,10 @@ export class ProductController {
         },
         filename: (_req, file, cb) => {
           const extension = extname(file.originalname || '').toLowerCase();
-          cb(null, `product-${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`);
+          cb(
+            null,
+            `product-${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`,
+          );
         },
       }),
       fileFilter: (_req, file, cb) => {
@@ -93,6 +96,7 @@ export class ProductController {
   }
 
   @Post()
+  @UseGuards(AuthGuard)
   createProduct(@Body() dto: CreateProductDto) {
     return this.productService.createProduct(dto);
   }
