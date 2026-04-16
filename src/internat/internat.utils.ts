@@ -8,6 +8,6 @@ export const mapTicketsToTicketListDto = (
     nickname: ticket.user.nickname,
     date: ticket.order.createdAt,
     goodies: ticket.sku.skuCode.includes('GOODIES'),
-    duvet: ticket.sku.skuCode.includes('DRAPS'),
+    duvet: ticket.sku.skuCode.includes('DRAP'),
   }));
 };
