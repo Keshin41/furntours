@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -94,7 +95,7 @@ export class InternatService {
       );
     }
 
-    // Create mapOrder (for orderItems)
+    // Aggregate internat variants into order-item buckets so pricing and stock stay centralized.
     const mapOrderItems = [
       { type: 'noDrapNoGoodies', value: 0 },
       { type: 'drapNoGoodies', value: 0 },
@@ -220,6 +221,7 @@ export class InternatService {
           });
         }
 
+        // This basket is returned to the frontend recap and mirrors the final order items.
         const internatBasket: {
           name: string;
           unitPrice: Decimal;
@@ -347,20 +349,25 @@ export class InternatService {
           },
         });
 
-        const newStock = skuInternatNoDrapNoGoodies.stock - items.length;
-        if (newStock >= 0) {
-          await tx.sku.update({
-            where: {
-              id: skuInternatNoDrapNoGoodies.id,
+        // Internat stock is reserved on the shared base SKU: one ticket always consumes one bed.
+        const reservedTickets = items.length;
+        const stockUpdate = await tx.sku.updateMany({
+          where: {
+            id: skuInternatNoDrapNoGoodies.id,
+            stock: {
+              gte: reservedTickets,
             },
-            data: {
-              stock: newStock,
+          },
+          data: {
+            stock: {
+              decrement: reservedTickets,
             },
-          });
-        } else {
-          throw new HttpException(
-            "Ce produit n'est plus disponible à la vente",
-            HttpStatus.INTERNAL_SERVER_ERROR,
+          },
+        });
+
+        if (stockUpdate.count === 0) {
+          throw new BadRequestException(
+            'Insufficient stock for Internat 2026 (INTERNAT_2026)',
           );
         }
 
