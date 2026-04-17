@@ -60,6 +60,27 @@ export class EventService {
     return mapEventToFurmeet(event);
   }
 
+  async createMeet(dto: CreateMeetDto) {
+    const eventActivities = this.toEventActivityData(dto.eventActivities);
+
+    const event = await this.prisma.event.create({
+      data: {
+        title: dto.title,
+        description: dto.description || '',
+        imageUrl: dto.imageUrl?.trim() || '',
+        type: EventType.MEET,
+        published: dto.published,
+        opened: dto.opened,
+        eventActivities: {
+          create: eventActivities,
+        },
+      },
+      include: EVENT_INCLUDE,
+    });
+
+    return mapEventToFurmeet(event);
+  }
+
   async updateById(id: string, dto: UpdateMeetDto) {
     const existingEvent = await this.prisma.event.findUnique({
       where: { id },

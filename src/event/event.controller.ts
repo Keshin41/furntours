@@ -16,7 +16,7 @@ import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { UpdateMeetDto } from './event.dto';
+import { CreateMeetDto, UpdateMeetDto } from './event.dto';
 import { EventService } from './event.service';
 
 const meetUploadDir = join(process.cwd(), 'uploads', 'meets');
@@ -39,6 +39,12 @@ export class EventController {
   @Get('/:id')
   getById(@Param('id') id: string) {
     return this.eventService.findById(id);
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('/')
+  createMeet(@Body() dto: CreateMeetDto) {
+    return this.eventService.createMeet(dto);
   }
 
   @UseGuards(AuthGuard)
