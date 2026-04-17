@@ -60,18 +60,6 @@ export class OrderCancellationService {
       throw new NotFoundException('Commande introuvable ou déjà traitée');
     }
 
-    const updated = await this.prisma.order.updateMany({
-      where: {
-        id: order.id,
-        status: 'PENDING',
-      },
-      data: { status: 'FAILED' },
-    });
-
-    if (updated.count === 0) {
-      throw new NotFoundException('Commande introuvable ou deja traitee');
-    }
-
     try {
       const stripeCanceled =
         await this.stripeService.cancelPaymentIntent(paymentIntentId);
@@ -98,6 +86,13 @@ export class OrderCancellationService {
         await this.restockOrderItemsTx(tx, order.id);
       });
     } catch (error: unknown) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof InternalServerErrorException
+      ) {
+        throw error;
+      }
+
       this.logger.error(
         `Failed to cancel/revert order ${order.id}: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
