@@ -23,6 +23,17 @@ export class StripeService {
     return paymentIntent.client_secret;
   }
 
+  async cancelPaymentIntent(paymentIntentId: string): Promise<void> {
+    try {
+      await this.stripeClient.paymentIntents.cancel(paymentIntentId);
+    } catch (err: unknown) {
+      // If the PI is already succeeded/canceled, ignore — nothing to cancel
+      this.logger.warn(
+        `Could not cancel PaymentIntent ${paymentIntentId}: ${err instanceof Error ? err.message : 'Unknown error'}`,
+      );
+    }
+  }
+
   verifyWebhook(event: Buffer, signature: string): Stripe.Event {
     try {
       const verifiedEvent = this.stripeClient.webhooks.constructEvent(

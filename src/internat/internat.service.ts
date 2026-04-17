@@ -1,5 +1,6 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/client';
+import { OrderService } from 'src/order/order.service';
 import { PAID_STATUSES } from 'src/order/order.types';
 import { StripeService } from 'src/payment/stripe.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -20,6 +21,7 @@ export class InternatService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly stripeService: StripeService,
+    private readonly orderService: OrderService,
   ) {}
 
   maxTickets = async () => {
@@ -357,6 +359,23 @@ export class InternatService {
     return { paymentIntent: paymentIntent, basket: internatBasket };
   };
 
+  async cancelOrder(paymentIntentId: string): Promise<void> {
+    const order = await this.prismaService.order.findUnique({
+      where: { paymentIntentId },
+    });
+
+    if (!order || order.status !== 'PENDING') {
+      throw new NotFoundException('Commande introuvable ou déjà traitée');
+    }
+
+    await this.stripeService.cancelPaymentIntent(paymentIntentId);
+    await this.orderService.restockOrderItems(order);
+    await this.prismaService.order.update({
+      where: { id: order.id },
+      data: { status: 'FAILED' },
+    });
+  }
+
   async getList(): Promise<TicketListDto[]> {
     const tickets: TicketsWithUsersSkuOrder[] =
       await this.prismaService.ticket.findMany({
@@ -369,6 +388,10 @@ export class InternatService {
           order: {
             status: { in: PAID_STATUSES },
           },
+        },
+        orderBy: {
+          orderId: 'desc',
+          createdAt: 'desc',
         },
       });
 

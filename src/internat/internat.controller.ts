@@ -2,8 +2,10 @@ import {
   Body,
   Controller,
   Get,
+  Delete,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -31,5 +33,11 @@ export class InternatController {
   @Post('/checkout')
   async processTickets(@Body() data: any): Promise<any> {
     return this.internatService.processOrder(data);
+  }
+
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete('/checkout/:paymentIntentId')
+  async cancelOrder(@Param('paymentIntentId') paymentIntentId: string): Promise<void> {
+    return this.internatService.cancelOrder(paymentIntentId);
   }
 }

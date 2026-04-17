@@ -214,6 +214,9 @@ export class OrderService {
       },
       skip: page * pageSize,
       take: pageSize,
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
     return mapOrdersToOrdersListDto(orders);
   }

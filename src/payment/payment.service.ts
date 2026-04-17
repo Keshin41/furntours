@@ -121,15 +121,6 @@ export class PaymentService {
           OrderStatus.PAID,
         );
         break;
-      case 'payment_intent.payment_failed': {
-        const updatedOrder =
-          await this.orderService.updateStatusByPaymentIntentId(
-            event.data.object.id,
-            OrderStatus.FAILED,
-          );
-        await this.orderService.restockOrderItems(updatedOrder);
-        break;
-      }
       default:
         this.logger.warn(`Unhandled Stripe event type: ${event.type}`);
     }

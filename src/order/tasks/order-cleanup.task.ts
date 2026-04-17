@@ -1,21 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { OrderStatus } from 'src/generated/prisma/client';
+import { StripeService } from 'src/payment/stripe.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { OrderService } from './order.service';
+import { OrderService } from '../order.service';
 
 @Injectable()
-export class OrderCleanupService {
-  private readonly logger = new Logger(OrderCleanupService.name);
+export class OrderCleanupTask {
+  private readonly logger = new Logger(OrderCleanupTask.name);
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly orderService: OrderService,
+    private readonly stripeService: StripeService,
   ) {}
 
   @Cron(CronExpression.EVERY_10_MINUTES)
   async expireStalePendingOrders() {
-    const cutoff = new Date(Date.now() - 15 * 60 * 1000);
+    const cutoff = new Date(Date.now() - 10 * 60 * 1000);
 
     const staleOrders = await this.prisma.order.findMany({
       where: {
@@ -36,6 +38,10 @@ export class OrderCleanupService {
 
     for (const order of staleOrders) {
       try {
+        if (order.paymentIntentId) {
+          await this.stripeService.cancelPaymentIntent(order.paymentIntentId);
+        }
+
         await this.orderService.restockOrderItems(order);
 
         await this.prisma.order.update({
