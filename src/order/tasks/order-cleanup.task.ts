@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { OrderStatus } from 'src/generated/prisma/client';
-import { StripeService } from 'src/payment/stripe.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { OrderService } from '../order.service';
+import { OrderCancellationService } from '../services/order-cancellation.service';
 
 @Injectable()
 export class OrderCleanupTask {
@@ -11,8 +10,7 @@ export class OrderCleanupTask {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly orderService: OrderService,
-    private readonly stripeService: StripeService,
+    private readonly orderCancellationService: OrderCancellationService,
   ) {}
 
   @Cron(CronExpression.EVERY_10_MINUTES)
@@ -39,15 +37,17 @@ export class OrderCleanupTask {
     for (const order of staleOrders) {
       try {
         if (order.paymentIntentId) {
-          await this.stripeService.cancelPaymentIntent(order.paymentIntentId);
+          await this.orderCancellationService.cancelPendingOrderByPaymentIntentId(
+            order.paymentIntentId,
+          );
+          this.logger.log(`Order ${order.id} marked as FAILED, stock restored`);
+          continue;
         }
 
-        await this.orderService.restockOrderItems(order);
-
-        await this.prisma.order.update({
-          where: { id: order.id },
-          data: { status: OrderStatus.FAILED },
-        });
+        // Fallback for stale PENDING orders that have no Stripe payment intent.
+        await this.orderCancellationService.expirePendingOrderWithoutPaymentIntent(
+          order.id,
+        );
 
         this.logger.log(`Order ${order.id} marked as FAILED, stock restored`);
       } catch (err) {

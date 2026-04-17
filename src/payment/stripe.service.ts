@@ -23,14 +23,24 @@ export class StripeService {
     return paymentIntent.client_secret;
   }
 
-  async cancelPaymentIntent(paymentIntentId: string): Promise<void> {
+  async cancelPaymentIntent(paymentIntentId: string): Promise<boolean> {
     try {
-      await this.stripeClient.paymentIntents.cancel(paymentIntentId);
+      const paymentIntent =
+        await this.stripeClient.paymentIntents.cancel(paymentIntentId);
+      return paymentIntent.status === 'canceled';
     } catch (err: unknown) {
-      // If the PI is already succeeded/canceled, ignore — nothing to cancel
       this.logger.warn(
         `Could not cancel PaymentIntent ${paymentIntentId}: ${err instanceof Error ? err.message : 'Unknown error'}`,
       );
+
+      // A second cancel or race can throw; consider it cancelled if Stripe now reports so.
+      try {
+        const paymentIntent =
+          await this.stripeClient.paymentIntents.retrieve(paymentIntentId);
+        return paymentIntent.status === 'canceled';
+      } catch {
+        return false;
+      }
     }
   }
 
