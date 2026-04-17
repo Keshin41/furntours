@@ -1,41 +1,49 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/client';
+import { OrderCancellationService } from 'src/order/services/order-cancellation.service';
+import { OrderCancelTokenService } from 'src/order/services/order-cancel-token.service';
 import { PAID_STATUSES } from 'src/order/order.types';
 import { StripeService } from 'src/payment/stripe.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { TicketListDto, TicketsWithUsersSkuOrder } from './internat.dto';
+import {
+  InternatCheckoutDto,
+  InternatCheckoutResponseDto,
+  InternatTicketInputDto,
+  MaxTicketsDto,
+  TicketListDto,
+  TicketsWithUsersSkuOrder,
+} from './internat.dto';
 import { mapTicketsToTicketListDto } from './internat.utils';
-
-export interface TicketDTO {
-  surname: string;
-  firstname: string;
-  nickname: string;
-  email: string;
-  drap: boolean;
-  goodies: boolean;
-}
 
 @Injectable()
 export class InternatService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly stripeService: StripeService,
+    private readonly orderCancellationService: OrderCancellationService,
+    private readonly orderCancelTokenService: OrderCancelTokenService,
   ) {}
 
-  maxTickets = async () => {
+  maxTickets = async (): Promise<MaxTicketsDto> => {
     const skuInternat = await this.prismaService.sku.findUnique({
       where: {
         skuCode: 'INTERNAT_2026',
       },
     });
-    if (skuInternat?.stock) {
-      const max = Math.min(skuInternat.stock, 6);
-      return { max: max };
-    }
+
+    return { max: Math.min(skuInternat?.stock ?? 0, 6) };
   };
 
-  processOrder = async (data: any) => {
-    const items = data.items as TicketDTO[];
+  processOrder = async (
+    data: InternatCheckoutDto,
+  ): Promise<InternatCheckoutResponseDto> => {
+    const items = data.items as InternatTicketInputDto[];
 
     const produitInternat = await this.prismaService.product.findFirst({
       where: {
@@ -87,7 +95,7 @@ export class InternatService {
       );
     }
 
-    // Create mapOrder (for orderItems)
+    // Aggregate internat variants into order-item buckets so pricing and stock stay centralized.
     const mapOrderItems = [
       { type: 'noDrapNoGoodies', value: 0 },
       { type: 'drapNoGoodies', value: 0 },
@@ -108,7 +116,7 @@ export class InternatService {
       },
     });
 
-    const { paymentIntent, internatBasket } =
+    const { paymentIntentId, paymentIntentClientSecret, internatBasket } =
       await this.prismaService.$transaction(async (tx) => {
         // Create Order
         const order = await tx.order.create({
@@ -143,7 +151,6 @@ export class InternatService {
               },
             },
           });
-          console.log(user);
 
           const hasTicket = user.tickets.some(
             (ticket) =>
@@ -214,6 +221,7 @@ export class InternatService {
           });
         }
 
+        // This basket is returned to the frontend recap and mirrors the final order items.
         const internatBasket: {
           name: string;
           unitPrice: Decimal;
@@ -318,44 +326,68 @@ export class InternatService {
           });
         }
 
-        const paymentIntent = await this.stripeService.createPaymentIntent(
+        const paymentIntentClientSecret =
+          await this.stripeService.createPaymentIntent(
           totalPrice.mul(100).toNumber(),
           buyer.email,
         );
+
+        if (!paymentIntentClientSecret) {
+          throw new InternalServerErrorException(
+            'Impossible de creer le payment intent',
+          );
+        }
+
+        const paymentIntentId = paymentIntentClientSecret.split('_secret')[0];
 
         await tx.order.update({
           where: {
             id: order.id,
           },
           data: {
-            paymentIntentId: paymentIntent?.split('_secret')[0],
+            paymentIntentId,
           },
         });
 
-        const newStock = skuInternatNoDrapNoGoodies.stock - items.length;
-        if (newStock >= 0) {
-          await tx.sku.update({
-            where: {
-              id: skuInternatNoDrapNoGoodies.id,
+        // Internat stock is reserved on the shared base SKU: one ticket always consumes one bed.
+        const reservedTickets = items.length;
+        const stockUpdate = await tx.sku.updateMany({
+          where: {
+            id: skuInternatNoDrapNoGoodies.id,
+            stock: {
+              gte: reservedTickets,
             },
-            data: {
-              stock: newStock,
+          },
+          data: {
+            stock: {
+              decrement: reservedTickets,
             },
-          });
-        } else {
-          throw new HttpException(
-            "Ce produit n'est plus disponible à la vente",
-            HttpStatus.INTERNAL_SERVER_ERROR,
+          },
+        });
+
+        if (stockUpdate.count === 0) {
+          throw new BadRequestException(
+            'Insufficient stock for Internat 2026 (INTERNAT_2026)',
           );
         }
 
-        return { paymentIntent, internatBasket };
+        return { paymentIntentId, paymentIntentClientSecret, internatBasket };
       });
 
-    console.log('data renvoyees', { paymentIntent, internatBasket });
-
-    return { paymentIntent: paymentIntent, basket: internatBasket };
+    return {
+      paymentIntent: paymentIntentClientSecret,
+      cancelToken: this.orderCancelTokenService.createToken(paymentIntentId),
+      basket: internatBasket,
+    };
   };
+
+  async cancelOrder(paymentIntentId: string, cancelToken?: string): Promise<void> {
+    this.orderCancelTokenService.assertValidToken(paymentIntentId, cancelToken);
+
+    await this.orderCancellationService.cancelPendingOrderByPaymentIntentId(
+      paymentIntentId,
+    );
+  }
 
   async getList(): Promise<TicketListDto[]> {
     const tickets: TicketsWithUsersSkuOrder[] =
@@ -368,6 +400,11 @@ export class InternatService {
         where: {
           order: {
             status: { in: PAID_STATUSES },
+          },
+        },
+        orderBy: {
+          order: {
+            createdAt: 'desc',
           },
         },
       });

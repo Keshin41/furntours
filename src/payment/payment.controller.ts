@@ -1,7 +1,20 @@
-import { Body, Controller, Headers, Post, RawBody } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  RawBody,
+} from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { StripeService } from './stripe.service';
-import { CreateOrderDto } from './types/order';
+import {
+  CreateOrderDto,
+  CreatePaymentIntentResponseDto,
+} from './types/order';
 
 @Controller('payment')
 export class PaymentController {
@@ -11,8 +24,19 @@ export class PaymentController {
   ) {}
 
   @Post('/create-payment-intent')
-  createPaymentIntent(@Body() orderDto: CreateOrderDto) {
+  createPaymentIntent(
+    @Body() orderDto: CreateOrderDto,
+  ): Promise<CreatePaymentIntentResponseDto> {
     return this.paymentService.createPayment(orderDto);
+  }
+
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete('/checkout/:paymentIntentId')
+  cancelPayment(
+    @Param('paymentIntentId') paymentIntentId: string,
+    @Headers('x-cancel-token') cancelToken?: string,
+  ): Promise<void> {
+    return this.paymentService.cancelPayment(paymentIntentId, cancelToken);
   }
 
   @Post('webhooks')

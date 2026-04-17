@@ -6,11 +6,16 @@ import {
 } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/client';
 import { OrderStatus } from 'src/generated/prisma/enums';
+import { OrderCancellationService } from 'src/order/services/order-cancellation.service';
+import { OrderCancelTokenService } from 'src/order/services/order-cancel-token.service';
 import { OrderService } from 'src/order/order.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Stripe } from 'stripe';
 import { StripeService } from './stripe.service';
-import { CreateOrderDto } from './types/order';
+import {
+  CreateOrderDto,
+  CreatePaymentIntentResponseDto,
+} from './types/order';
 
 @Injectable()
 export class PaymentService {
@@ -19,13 +24,30 @@ export class PaymentService {
     private readonly prisma: PrismaService,
     private readonly stripeService: StripeService,
     private readonly orderService: OrderService,
+    private readonly orderCancellationService: OrderCancellationService,
+    private readonly orderCancelTokenService: OrderCancelTokenService,
   ) {}
 
-  async createPayment(orderDto: CreateOrderDto) {
+  async createPayment(
+    orderDto: CreateOrderDto,
+  ): Promise<CreatePaymentIntentResponseDto> {
+    const groupedBasket = new Map<string, number>();
+    for (const item of orderDto.basket) {
+      groupedBasket.set(
+        item.skuId,
+        (groupedBasket.get(item.skuId) ?? 0) + item.quantity,
+      );
+    }
+
+    const skuIds = [...groupedBasket.keys()];
+    if (!skuIds.length) {
+      throw new BadRequestException('Order must contain at least one item');
+    }
+
     const skus = await this.prisma.sku.findMany({
       where: {
         id: {
-          in: orderDto.basket.map((item) => item.skuId),
+          in: skuIds,
         },
       },
       include: {
@@ -33,16 +55,17 @@ export class PaymentService {
       },
     });
 
-    if (skus.length !== orderDto.basket.length) {
+    if (skus.length !== skuIds.length) {
+      const foundSkuIds = new Set(skus.map((sku) => sku.id));
+      const missingSkuIds = skuIds.filter((id) => !foundSkuIds.has(id));
       this.logger.error(
-        `One or more SKUs not found: expected ${orderDto.basket.length}, found ${skus.length}`,
+        `One or more SKUs not found: missing [${missingSkuIds.join(', ')}]`,
       );
       throw new BadRequestException('One or more SKUs not found');
     }
 
     const totalAmount = skus.reduce((total, sku) => {
-      const quantity =
-        orderDto.basket.find((item) => item.skuId === sku.id)?.quantity || 0;
+      const quantity = groupedBasket.get(sku.id) ?? 0;
       const price = sku.priceOverride ?? sku.product.basePrice;
       return price.mul(quantity).plus(total);
     }, new Decimal(0));
@@ -56,60 +79,84 @@ export class PaymentService {
       throw new InternalServerErrorException('Failed to create payment intent');
     }
 
-    const user = await this.prisma.user.upsert({
-      where: {
-        email: orderDto.user.email,
-      },
-      update: {
-        firstname: orderDto.user.firstname,
-        lastname: orderDto.user.lastname,
-        nickname: orderDto.user.nickname,
-        address: orderDto.user.address,
-        city: orderDto.user.city,
-        postalCode: orderDto.user.postalCode,
-      },
-      create: {
-        email: orderDto.user.email,
-        firstname: orderDto.user.firstname,
-        lastname: orderDto.user.lastname,
-        nickname: orderDto.user.nickname,
-        address: orderDto.user.address,
-        city: orderDto.user.city,
-        postalCode: orderDto.user.postalCode,
-      },
-    });
+    const paymentIntentId = paymentIntent.split('_secret')[0];
 
-    const orderItemsData = skus.map((item) => {
-      const quantity = orderDto.basket.find(
-        (i) => i.skuId === item.id,
-      )?.quantity;
-      if (!quantity) {
-        throw new BadRequestException(
-          `Quantity not found for SKU ${item.id}, product ${item.product.name}`,
-        );
-      }
-      return {
-        skuId: item.id,
-        quantity,
-        unitPrice: item.priceOverride ?? item.product.basePrice,
-      };
-    });
-
-    const updatedOrder = await this.prisma.order.create({
-      data: {
-        userId: user.id,
-        paymentIntentId: paymentIntent.split('_secret')[0],
-        orderItems: {
-          create: orderItemsData,
+    await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.upsert({
+        where: {
+          email: orderDto.user.email,
         },
-      },
+        update: {
+          firstname: orderDto.user.firstname,
+          lastname: orderDto.user.lastname,
+          nickname: orderDto.user.nickname,
+          address: orderDto.user.address,
+          city: orderDto.user.city,
+          postalCode: orderDto.user.postalCode,
+        },
+        create: {
+          email: orderDto.user.email,
+          firstname: orderDto.user.firstname,
+          lastname: orderDto.user.lastname,
+          nickname: orderDto.user.nickname,
+          address: orderDto.user.address,
+          city: orderDto.user.city,
+          postalCode: orderDto.user.postalCode,
+        },
+      });
+
+      for (const sku of skus) {
+        const quantity = groupedBasket.get(sku.id) ?? 0;
+
+        if (sku.trackStock) {
+          const updated = await tx.sku.updateMany({
+            where: {
+              id: sku.id,
+              stock: {
+                gte: quantity,
+              },
+            },
+            data: {
+              stock: {
+                decrement: quantity,
+              },
+            },
+          });
+
+          if (updated.count === 0) {
+            throw new BadRequestException(
+              `Insufficient stock for ${sku.product.name} (${sku.skuCode})`,
+            );
+          }
+        }
+      }
+
+      await tx.order.create({
+        data: {
+          userId: user.id,
+          paymentIntentId,
+          orderItems: {
+            create: skus.map((sku) => ({
+              skuId: sku.id,
+              quantity: groupedBasket.get(sku.id) ?? 0,
+              unitPrice: sku.priceOverride ?? sku.product.basePrice,
+            })),
+          },
+        },
+      });
     });
-    await this.orderService.destockOrderItems(updatedOrder);
-    console.log(
-      '🚀 ~ PayementService ~ createPayment ~ paymentIntent:',
+
+    return {
       paymentIntent,
+      cancelToken: this.orderCancelTokenService.createToken(paymentIntentId),
+    };
+  }
+
+  async cancelPayment(paymentIntentId: string, cancelToken?: string): Promise<void> {
+    this.orderCancelTokenService.assertValidToken(paymentIntentId, cancelToken);
+    await this.orderCancellationService.cancelPendingOrderByPaymentIntentId(
+      paymentIntentId,
     );
-    return paymentIntent;
   }
 
   async handleStripeEvent(event: Stripe.Event) {
@@ -121,15 +168,6 @@ export class PaymentService {
           OrderStatus.PAID,
         );
         break;
-      case 'payment_intent.payment_failed': {
-        const updatedOrder =
-          await this.orderService.updateStatusByPaymentIntentId(
-            event.data.object.id,
-            OrderStatus.FAILED,
-          );
-        await this.orderService.restockOrderItems(updatedOrder);
-        break;
-      }
       default:
         this.logger.warn(`Unhandled Stripe event type: ${event.type}`);
     }

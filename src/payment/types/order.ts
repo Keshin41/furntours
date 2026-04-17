@@ -20,3 +20,8 @@ const CreateOrderSchema = z.object({
 });
 
 export class CreateOrderDto extends createZodDto(CreateOrderSchema) {}
+
+export type CreatePaymentIntentResponseDto = {
+  paymentIntent: string;
+  cancelToken: string;
+};
