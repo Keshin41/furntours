@@ -13,7 +13,7 @@ const EventActivitySchema = z.object({
 const UpsertMeetSchema = z.object({
   title: z.string().trim().min(1),
   description: z.string().trim().optional().default(''),
-  imageUrl: z.string().trim().optional(),
+  imageUrl: z.string().trim().optional().default(''),
   published: z.boolean().default(false),
   opened: z.boolean().default(false),
   eventActivities: z.array(EventActivitySchema).default([]),

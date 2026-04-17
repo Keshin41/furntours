@@ -82,7 +82,7 @@ export class EventService {
         data: {
           title: dto.title,
           description: dto.description || '',
-          imageUrl: dto.imageUrl?.trim() || null,
+          imageUrl: dto.imageUrl?.trim() || '',
           published: dto.published,
           opened: dto.opened,
         },
@@ -107,7 +107,7 @@ export class EventService {
     const event = await this.prisma.event.update({
       where: { id },
       data: {
-        imageUrl: imageUrl?.trim() || null,
+        imageUrl: imageUrl?.trim() || '',
       },
       include: EVENT_INCLUDE,
     });
