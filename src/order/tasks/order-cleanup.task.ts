@@ -15,7 +15,7 @@ export class OrderCleanupTask {
 
   @Cron(CronExpression.EVERY_10_MINUTES)
   async expireStalePendingOrders() {
-    const cutoff = new Date(Date.now() - 1 * 60 * 1000);
+    const cutoff = new Date(Date.now() - 10 * 60 * 1000);
 
     const staleOrders = await this.prisma.order.findMany({
       where: {
