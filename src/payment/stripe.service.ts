@@ -23,6 +23,12 @@ export class StripeService {
     return paymentIntent.client_secret;
   }
 
+  async cancelPayment(id: string) {
+    await this.stripeClient.paymentIntents.cancel(id, {
+      cancellation_reason: 'abandoned',
+    });
+  }
+
   verifyWebhook(event: Buffer, signature: string): Stripe.Event {
     try {
       const verifiedEvent = this.stripeClient.webhooks.constructEvent(

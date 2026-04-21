@@ -105,33 +105,17 @@ export class PaymentService {
       },
     });
     await this.orderService.destockOrderItems(updatedOrder);
-    console.log(
-      '🚀 ~ PayementService ~ createPayment ~ paymentIntent:',
-      paymentIntent,
-    );
     return paymentIntent;
   }
 
   async handleStripeEvent(event: Stripe.Event) {
-    // Handle the event (e.g., update order status in the database)
-    switch (event.type) {
-      case 'payment_intent.succeeded':
-        await this.orderService.updateStatusByPaymentIntentId(
-          event.data.object.id,
-          OrderStatus.PAID,
-        );
-        break;
-      case 'payment_intent.payment_failed': {
-        const updatedOrder =
-          await this.orderService.updateStatusByPaymentIntentId(
-            event.data.object.id,
-            OrderStatus.FAILED,
-          );
-        await this.orderService.restockOrderItems(updatedOrder);
-        break;
-      }
-      default:
-        this.logger.warn(`Unhandled Stripe event type: ${event.type}`);
+    if (event.type === 'payment_intent.succeeded') {
+      await this.orderService.updateStatusByPaymentIntentId(
+        event.data.object.id,
+        OrderStatus.PAID,
+      );
+    } else {
+      this.logger.warn(`Unhandled Stripe event type: ${event.type}`);
     }
   }
 }
