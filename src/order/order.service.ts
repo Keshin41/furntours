@@ -1,10 +1,15 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { Order, OrderStatus } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ORDER_INCLUDE } from './constant';
+import { CreateManualOrderDto } from './order.dto';
 import { OrderWithItemsBuyer } from './order.types';
 import { mapOrdersToOrdersListDto, mapOrderToDetailDto } from './order.utils';
-import { CreateManualOrderDto } from './order.dto';
 
 @Injectable()
 export class OrderService {
@@ -14,7 +19,10 @@ export class OrderService {
     const groupedItems = new Map<string, number>();
 
     for (const item of data.items) {
-      groupedItems.set(item.skuId, (groupedItems.get(item.skuId) ?? 0) + item.quantity);
+      groupedItems.set(
+        item.skuId,
+        (groupedItems.get(item.skuId) ?? 0) + item.quantity,
+      );
     }
 
     const skuIds = [...groupedItems.keys()];
@@ -127,7 +135,7 @@ export class OrderService {
 
     return mapOrderToDetailDto(createdOrder);
   }
-  
+
   async restockOrderItems(order: Order) {
     const orderItems = await this.prisma.orderItem.findMany({
       where: {
@@ -146,7 +154,10 @@ export class OrderService {
           },
         });
         if (!skuInternat) {
-          throw new HttpException('Sku non trouvé', HttpStatus.INTERNAL_SERVER_ERROR);
+          throw new HttpException(
+            'Sku non trouvé',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
         }
         await this.prisma.sku.update({
           where: {
@@ -222,7 +233,6 @@ export class OrderService {
     return this.prisma.order.count();
   }
 
-  
   async findById(id: string) {
     const order = await this.prisma.order.findUnique({
       where: { id },
