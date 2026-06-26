@@ -20,20 +20,21 @@ enum Role {
 }
 
 model User {
-  id         String   @id @default(uuid())
-  firstname  String
-  lastname   String
-  nickname   String
-  email      String   @unique
-  password   String?
-  address    String?
-  city       String?
-  postalCode String?  @map("postal_code")
-  role       Role     @default(USER)
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-  orders     Order[]
-  tickets    Ticket[]
+  id            String         @id @default(uuid())
+  firstname     String
+  lastname      String
+  nickname      String
+  email         String         @unique
+  password      String?
+  address       String?
+  city          String?
+  postalCode    String?        @map("postal_code")
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  orders        Order[]
+  tickets       Ticket[]
+  registrations Registration[]
 
   @@map("user")
 }
@@ -74,9 +75,72 @@ model EventPart {
   order       Int           @db.SmallInt
   type        EventPartType
 
-  event Event @relation(fields: [eventId], references: [id])
+  event                     Event                      @relation(fields: [eventId], references: [id])
+  eventPartFieldDefinitions EventPartFieldDefinition[]
+  registrations             Registration[]
 
   @@map("event_activity")
+}
+
+model EventPartFieldDefinition {
+  id          String    @id @default(uuid())
+  eventPartId String    @map("event_part_id")
+  eventPart   EventPart @relation(fields: [eventPartId], references: [id])
+
+  label    String
+  type     FieldType
+  required Boolean   @default(false)
+  order    Int       @default(0)
+
+  options FieldOption[]
+  answers RegistrationAnswer[]
+
+  @@map("event_activity_field_definition")
+}
+
+model FieldOption {
+  id                String                   @id @default(uuid())
+  fieldDefinitionId String                   @map("field_definition_id")
+  fieldDefinition   EventPartFieldDefinition @relation(fields: [fieldDefinitionId], references: [id])
+  label             String
+  order             Int                      @default(0)
+
+  @@map("field_option")
+}
+
+enum FieldType {
+  TEXT
+  NUMBER
+  SELECT
+  CHECKBOX
+  RADIO
+}
+
+model Registration {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id])
+  eventPartId String    @map("event_part_id")
+  eventPart   EventPart @relation(fields: [eventPartId], references: [id])
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  answers RegistrationAnswer[]
+
+  @@map("registration")
+}
+
+model RegistrationAnswer {
+  id                String                   @id @default(uuid())
+  registrationId    String                   @map("registration_id")
+  registration      Registration             @relation(fields: [registrationId], references: [id])
+  fieldDefinitionId String                   @map("field_definition_id")
+  fieldDefinition   EventPartFieldDefinition @relation(fields: [fieldDefinitionId], references: [id])
+  value             String
+  createdAt         DateTime                 @default(now()) @map("created_at")
+  updatedAt         DateTime                 @updatedAt @map("updated_at")
+
+  @@map("registration_answer")
 }
 
 model Product {
@@ -136,7 +200,7 @@ model Sku {
   product    Product          @relation(fields: [productId], references: [id])
   options    SkuOptionValue[]
   orderItems OrderItem[]
-  tickets Ticket[]
+  tickets    Ticket[]
 
   @@map("sku")
 }
@@ -182,16 +246,16 @@ model OrderItem {
   quantity  Int     @db.SmallInt
   unitPrice Decimal @db.Decimal(10, 2)
 
-  order   Order @relation(fields: [orderId], references: [id])
-  sku     Sku   @relation(fields: [skuId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
+  sku   Sku   @relation(fields: [skuId], references: [id])
 
   @@map("order_item")
 }
 
 model Ticket {
-  userId  String  @map("user_id")
-  skuId   String  @map("sku_id")
-  orderId String  @map("order_id")
+  userId  String @map("user_id")
+  skuId   String @map("sku_id")
+  orderId String @map("order_id")
 
   user  User  @relation(fields: [userId], references: [id])
   sku   Sku   @relation(fields: [skuId], references: [id])
