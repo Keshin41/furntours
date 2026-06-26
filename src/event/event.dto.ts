@@ -10,7 +10,7 @@ const EventActivitySchema = z.object({
   type: z.enum(EventPartType).optional().default(EventPartType.OTHER),
 });
 
-const UpsertMeetSchema = z.object({
+const UpsertEventSchema = z.object({
   title: z.string().trim().min(1),
   description: z.string().trim().optional().default(''),
   imageUrl: z.string().trim().optional().default(''),
@@ -19,5 +19,5 @@ const UpsertMeetSchema = z.object({
   eventActivities: z.array(EventActivitySchema).default([]),
 });
 
-export class CreateMeetDto extends createZodDto(UpsertMeetSchema) {}
-export class UpdateMeetDto extends createZodDto(UpsertMeetSchema) {}
+export class CreateEventDto extends createZodDto(UpsertEventSchema) {}
+export class UpdateEventDto extends createZodDto(UpsertEventSchema) {}

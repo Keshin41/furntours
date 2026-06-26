@@ -1,12 +1,11 @@
-import {
-  EventWithActivities,
-  FurmeetActivity,
-  FurmeetResponse,
-} from './types/event';
+import { BadRequestException } from '@nestjs/common';
+import { EventPartType } from 'src/generated/prisma/enums';
+import { CreateEventDto } from './event.dto';
+import { EventWithActivities, MeetActivity, MeetResponse } from './types/event';
 
 export const sortActivitiesByDate = (
-  activities: FurmeetActivity[],
-): FurmeetActivity[] => {
+  activities: MeetActivity[],
+): MeetActivity[] => {
   return [...activities].sort((a, b) => {
     if (a.order !== b.order) {
       return a.order - b.order;
@@ -15,7 +14,7 @@ export const sortActivitiesByDate = (
   });
 };
 
-export const getEventDate = (activities: FurmeetActivity[]): Date | null => {
+export const getEventDate = (activities: MeetActivity[]): Date | null => {
   return activities[0]?.date ?? null;
 };
 
@@ -23,9 +22,7 @@ export const toTimestamp = (value: Date | null): number => {
   return value ? value.getTime() : 0;
 };
 
-export const mapEventToFurmeet = (
-  event: EventWithActivities,
-): FurmeetResponse => {
+export const mapEventToFurmeet = (event: EventWithActivities): MeetResponse => {
   const sortedActivities = sortActivitiesByDate(event.eventActivities);
   const eventDate = getEventDate(sortedActivities);
 
@@ -45,8 +42,28 @@ export const mapEventToFurmeet = (
 };
 
 export const sortByEventDateDesc = (
-  a: FurmeetResponse,
-  b: FurmeetResponse,
+  a: MeetResponse,
+  b: MeetResponse,
 ): number => {
   return toTimestamp(b.eventDate) - toTimestamp(a.eventDate);
+};
+
+export const mapEventPartDtoToEventPart = (
+  eventActivities: CreateEventDto['eventActivities'],
+) => {
+  return eventActivities.map((activity, index) => {
+    const parsedDate = new Date(activity.date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      throw new BadRequestException(`Invalid activity date at index ${index}`);
+    }
+
+    return {
+      title: activity.title,
+      description: activity.description || '',
+      date: parsedDate,
+      order: activity.order ?? index,
+      type: activity.type ?? EventPartType.OTHER,
+    };
+  });
 };

@@ -1,6 +1,6 @@
 import { EventPartType, EventType } from 'src/generated/prisma/client';
 
-export type FurmeetActivity = {
+export type MeetActivity = {
   id: string;
   order: number;
   type: EventPartType;
@@ -19,10 +19,10 @@ export type EventWithActivities = {
   opened: boolean;
   createdAt: Date;
   updatedAt: Date;
-  eventActivities: FurmeetActivity[];
+  eventActivities: MeetActivity[];
 };
 
-export type FurmeetResponse = {
+export type MeetResponse = {
   id: string;
   title: string;
   description: string;
@@ -33,5 +33,5 @@ export type FurmeetResponse = {
   createdAt: Date;
   updatedAt: Date;
   eventDate: Date | null;
-  eventActivities: FurmeetActivity[];
+  eventActivities: MeetActivity[];
 };

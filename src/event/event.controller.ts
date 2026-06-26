@@ -16,8 +16,9 @@ import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { CreateMeetDto, UpdateMeetDto } from './event.dto';
+import { CreateEventDto, UpdateEventDto } from './event.dto';
 import { EventService } from './event.service';
+import { MeetResponse } from './types/event';
 
 const meetUploadDir = join(process.cwd(), 'uploads', 'meets');
 
@@ -43,14 +44,17 @@ export class EventController {
 
   @UseGuards(AuthGuard)
   @Post('/')
-  createMeet(@Body() dto: CreateMeetDto) {
-    return this.eventService.createMeet(dto);
+  createMeet(@Body() createEventDto: CreateEventDto): Promise<MeetResponse> {
+    return this.eventService.createMeet(createEventDto);
   }
 
   @UseGuards(AuthGuard)
   @Put('/:id')
-  updateMeet(@Param('id') id: string, @Body() dto: UpdateMeetDto) {
-    return this.eventService.updateById(id, dto);
+  updateMeet(
+    @Param('id') eventId: string,
+    @Body() updateEventDto: UpdateEventDto,
+  ) {
+    return this.eventService.updateById(eventId, updateEventDto);
   }
 
   @UseGuards(AuthGuard)
@@ -73,7 +77,10 @@ export class EventController {
         },
         filename: (_req, file, cb) => {
           const extension = extname(file.originalname || '').toLowerCase();
-          cb(null, `meet-${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`);
+          cb(
+            null,
+            `meet-${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`,
+          );
         },
       }),
       fileFilter: (_req, file, cb) => {

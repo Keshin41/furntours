@@ -1,35 +1,17 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { EventPartType, EventType } from 'src/generated/prisma/enums';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { EventType } from 'src/generated/prisma/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { EVENT_INCLUDE } from './constant';
-import { CreateMeetDto, UpdateMeetDto } from './event.dto';
-import { mapEventToFurmeet, sortByEventDateDesc } from './event.utils';
+import { CreateEventDto, UpdateEventDto } from './event.dto';
+import {
+  mapEventPartDtoToEventPart,
+  mapEventToFurmeet as mapEventToMeetResponse,
+  sortByEventDateDesc,
+} from './event.utils';
 
 @Injectable()
 export class EventService {
   constructor(private readonly prisma: PrismaService) {}
-
-  private toEventActivityData(
-    eventActivities: CreateMeetDto['eventActivities'],
-  ) {
-    return eventActivities.map((activity, index) => {
-      const parsedDate = new Date(activity.date);
-
-      if (Number.isNaN(parsedDate.getTime())) {
-        throw new BadRequestException(
-          `Invalid activity date at index ${index}`,
-        );
-      }
-
-      return {
-        title: activity.title,
-        description: activity.description || '',
-        date: parsedDate,
-        order: activity.order ?? index,
-        type: activity.type ?? EventPartType.OTHER,
-      };
-    });
-  }
 
   async findAll() {
     const events = await this.prisma.event.findMany({
@@ -43,7 +25,7 @@ export class EventService {
     });
 
     return events
-      .map((event) => mapEventToFurmeet(event))
+      .map((event) => mapEventToMeetResponse(event))
       .sort((a, b) => sortByEventDateDesc(a, b));
   }
 
@@ -57,20 +39,22 @@ export class EventService {
       return null;
     }
 
-    return mapEventToFurmeet(event);
+    return mapEventToMeetResponse(event);
   }
 
-  async createMeet(dto: CreateMeetDto) {
-    const eventActivities = this.toEventActivityData(dto.eventActivities);
+  async createMeet(createEventDto: CreateEventDto) {
+    const eventActivities = mapEventPartDtoToEventPart(
+      createEventDto.eventActivities,
+    );
 
     const event = await this.prisma.event.create({
       data: {
-        title: dto.title,
-        description: dto.description || '',
-        imageUrl: dto.imageUrl?.trim() || '',
+        title: createEventDto.title,
+        description: createEventDto.description || '',
+        imageUrl: createEventDto.imageUrl?.trim() || '',
         type: EventType.MEET,
-        published: dto.published,
-        opened: dto.opened,
+        published: createEventDto.published,
+        opened: createEventDto.opened,
         eventActivities: {
           create: eventActivities,
         },
@@ -78,12 +62,12 @@ export class EventService {
       include: EVENT_INCLUDE,
     });
 
-    return mapEventToFurmeet(event);
+    return mapEventToMeetResponse(event);
   }
 
-  async updateById(id: string, dto: UpdateMeetDto) {
+  async updateById(eventId: string, eventUpdateDto: UpdateEventDto) {
     const existingEvent = await this.prisma.event.findUnique({
-      where: { id },
+      where: { id: eventId },
       select: { id: true, type: true },
     });
 
@@ -91,37 +75,39 @@ export class EventService {
       throw new NotFoundException('Meet not found');
     }
 
-    const eventActivities = this.toEventActivityData(dto.eventActivities);
+    const eventActivities = mapEventPartDtoToEventPart(
+      eventUpdateDto.eventActivities,
+    );
 
     await this.prisma.$transaction(async (tx) => {
       await tx.eventPart.deleteMany({
-        where: { eventId: id },
+        where: { eventId: eventId },
       });
 
       await tx.event.update({
-        where: { id },
+        where: { id: eventId },
         data: {
-          title: dto.title,
-          description: dto.description || '',
-          imageUrl: dto.imageUrl?.trim() || '',
-          published: dto.published,
-          opened: dto.opened,
+          title: eventUpdateDto.title,
+          description: eventUpdateDto.description || '',
+          imageUrl: eventUpdateDto.imageUrl?.trim() || '',
+          published: eventUpdateDto.published,
+          opened: eventUpdateDto.opened,
         },
       });
 
       if (eventActivities.length > 0) {
         await tx.eventPart.createMany({
-          data: eventActivities.map((a) => ({ ...a, eventId: id })),
+          data: eventActivities.map((a) => ({ ...a, eventId: eventId })),
         });
       }
     });
 
     const event = await this.prisma.event.findUniqueOrThrow({
-      where: { id },
+      where: { id: eventId },
       include: EVENT_INCLUDE,
     });
 
-    return mapEventToFurmeet(event);
+    return mapEventToMeetResponse(event);
   }
 
   async updateImage(id: string, imageUrl?: string) {
@@ -137,6 +123,6 @@ export class EventService {
       return null;
     }
 
-    return mapEventToFurmeet(event);
+    return mapEventToMeetResponse(event);
   }
 }
