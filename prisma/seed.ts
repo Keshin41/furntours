@@ -142,7 +142,7 @@ async function main() {
     create: {
       email: 'vgorgeon@gmail.com',
       nickname: 'Vikari',
-      password: 'truc',
+      password: '$2a$12$ni6NdoEzusEij9idFWGnT.rztLIJIofywONZWNJXl5.LHjMR..XY.',
       firstname: 'Valentin',
       lastname: 'Gorgeon',
     },
