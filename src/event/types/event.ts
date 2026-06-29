@@ -34,4 +34,5 @@ export type MeetResponse = {
   updatedAt: Date;
   eventDate: Date | null;
   eventActivities: MeetActivity[];
+  hasAttachedForm: boolean;
 };

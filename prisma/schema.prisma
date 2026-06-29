@@ -131,7 +131,6 @@ model Registration {
 }
 
 model RegistrationAnswer {
-  id                String                   @id @default(uuid())
   registrationId    String                   @map("registration_id")
   registration      Registration             @relation(fields: [registrationId], references: [id])
   fieldDefinitionId String                   @map("field_definition_id")
@@ -140,6 +139,7 @@ model RegistrationAnswer {
   createdAt         DateTime                 @default(now()) @map("created_at")
   updatedAt         DateTime                 @updatedAt @map("updated_at")
 
+  @@id([registrationId, fieldDefinitionId])
   @@map("registration_answer")
 }
 

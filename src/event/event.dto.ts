@@ -1,6 +1,13 @@
 import { createZodDto } from 'nestjs-zod';
-import { EventPartType } from 'src/generated/prisma/enums';
+import { EventPartType, FieldType } from 'src/generated/prisma/enums';
 import { z } from 'zod';
+
+const EventActivityQuestionSchema = z.object({
+  label: z.string().trim().min(1),
+  order: z.number().int().nonnegative().optional(),
+  type: z.enum(FieldType).optional().default(FieldType.TEXT),
+  required: z.boolean().default(false),
+});
 
 const EventActivitySchema = z.object({
   title: z.string().trim().min(1),
@@ -8,6 +15,7 @@ const EventActivitySchema = z.object({
   date: z.string().trim().min(1),
   order: z.number().int().nonnegative().optional(),
   type: z.enum(EventPartType).optional().default(EventPartType.OTHER),
+  activityQuestions: z.array(EventActivityQuestionSchema).optional(),
 });
 
 const UpsertEventSchema = z.object({
