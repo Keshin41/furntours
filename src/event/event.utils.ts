@@ -90,6 +90,7 @@ export const mapEventPartDtoToEventPart = (
 
 export type EventForm = {
   eventActivities: {
+    id: string;
     order: number;
     title: string;
     eventPartFieldDefinitions: {
@@ -110,14 +111,25 @@ export type QuestionDto = {
 };
 
 export type FormDto = {
+  id: string;
   activity: string;
   questions: QuestionDto[];
 }[];
 
 export type AnswerDto = {
-  eventPartId: string;
   questionId: string;
   answer: string;
+};
+
+export type FormAnswersDto = {
+  email: string;
+  activities: ActivityAnswersDto[];
+};
+
+export type ActivityAnswersDto = {
+  activityId: string;
+  present: boolean;
+  answers: AnswerDto[];
 };
 
 export const mapEventFormToDto = (eventForm: EventForm) => {
@@ -135,6 +147,7 @@ export const mapEventFormToDto = (eventForm: EventForm) => {
     });
 
     dto.push({
+      id: activity.id,
       activity: activity.title,
       questions: questions,
     });

@@ -17,6 +17,7 @@ export const EVENT_INCLUDE = {
 export const EVENT_FORM_INCLUDE = {
   eventActivities: {
     select: {
+      id: true,
       order: true,
       title: true,
       eventPartFieldDefinitions: {

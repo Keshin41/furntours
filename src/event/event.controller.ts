@@ -18,7 +18,8 @@ import { extname, join } from 'path';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CreateEventDto, UpdateEventDto } from './event.dto';
 import { EventService } from './event.service';
-import { AnswerDto } from './event.utils';
+import type { FormAnswersDto } from './event.utils';
+import { MeetResponse } from './types/event';
 
 const meetUploadDir = join(process.cwd(), 'uploads', 'meets');
 
@@ -48,8 +49,8 @@ export class EventController {
   }
 
   @Post('/:id/form')
-  processFormAnswer(@Param('id') id: string, @Body() answers: AnswerDto[]) {
-    return this.eventService.processFormAnswer(answers);
+  processFormAnswer(@Body() formAnswers: FormAnswersDto) {
+    return this.eventService.processFormAnswer(formAnswers);
   }
 
   @UseGuards(AuthGuard)
