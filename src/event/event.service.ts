@@ -4,7 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { EVENT_FORM_INCLUDE, EVENT_INCLUDE } from './constant';
 import { CreateEventDto, UpdateEventDto } from './event.dto';
 import {
-  AnswerDto,
+  FormAnswersDto,
   mapEventFormToDto,
   mapEventPartDtoToEventPart,
   mapEventToFurmeet as mapEventToMeetResponse,
@@ -167,52 +167,39 @@ export class EventService {
 
     return mapEventFormToDto(eventForm);
   }
-  async processFormAnswer(answers: AnswerDto[]) {
-    // pas de lien direct avec le user car pas de connexion possible
-    // 1 question avec le pseudo demandé
-    // si pseudo connu => on a le user, sinon, on le créer
 
-    const nickname = answers[0].answer;
-
-    let user = await this.prisma.user.findFirst({
+  async processFormAnswer(formAnswers: FormAnswersDto) {
+    const user = await this.prisma.user.upsert({
       where: {
-        nickname: nickname,
+        email: formAnswers.email,
       },
+      create: {
+        email: formAnswers.email,
+        firstname: 'firstname',
+        lastname: 'lastname',
+        nickname: 'nickname',
+      },
+      update: {},
     });
 
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          nickname: nickname,
-          email: "empty email",
-          firstname: "empty firstname",
-          lastname: "empty lastname",
-        },
-      });
+    for (const activityAnswersDto of formAnswers.activities) {
+      if (activityAnswersDto.present) {
+        const registration = await this.prisma.registration.create({
+          data: {
+            eventPartId: activityAnswersDto.activityId,
+            userId: user.id,
+          },
+        });
+        for (const answerDto of activityAnswersDto.answers) {
+          await this.prisma.registrationAnswer.create({
+            data: {
+              registrationId: registration.id,
+              fieldDefinitionId: answerDto.questionId,
+              value: answerDto.answer,
+            },
+          });
+        }
+      }
     }
-
-    // On recupere l'event part ou relier la reponse
-
-    const questionIdToEventPartId: {questionId: string, Event} = [];
-
-    // On cree le lien form/user
-
-
-    // insert each answers into the database
-    answers.forEach((answer) => {
-      const registration = await this.prisma.registration.upsert({
-        where: {
-          eventPartId: answer.eventPartId,
-          userId: user.id,
-        }
-      })
-
-      await this.prisma.registrationAnswer.create({
-        data: {
-          registrationId: registration.id,
-          value: answer.answer,
-          fieldDefinitionId: answer.questionId,
-        }
-      })
   }
 }
