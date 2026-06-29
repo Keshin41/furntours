@@ -13,3 +13,27 @@ export const EVENT_INCLUDE = {
     },
   },
 };
+
+export const EVENT_FORM_INCLUDE = {
+  eventActivities: {
+    select: {
+      order: true,
+      title: true,
+      eventPartFieldDefinitions: {
+        select: {
+          id: true,
+          type: true,
+          order: true,
+          label: true,
+          required: true,
+        },
+        orderBy: {
+          order: 'asc' as const,
+        },
+      },
+    },
+    orderBy: {
+      order: 'asc' as const,
+    },
+  },
+};

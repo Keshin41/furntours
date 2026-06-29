@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { EventPartType } from 'src/generated/prisma/enums';
+import { EventPartType, FieldType } from 'src/generated/prisma/enums';
 import { CreateEventDto } from './event.dto';
 import { EventWithActivities, MeetActivity, MeetResponse } from './types/event';
 
@@ -22,7 +22,10 @@ export const toTimestamp = (value: Date | null): number => {
   return value ? value.getTime() : 0;
 };
 
-export const mapEventToFurmeet = (event: EventWithActivities): MeetResponse => {
+export const mapEventToFurmeet = (
+  event: EventWithActivities,
+  hasAttachedForm: boolean,
+): MeetResponse => {
   const sortedActivities = sortActivitiesByDate(event.eventActivities);
   const eventDate = getEventDate(sortedActivities);
 
@@ -38,6 +41,7 @@ export const mapEventToFurmeet = (event: EventWithActivities): MeetResponse => {
     updatedAt: event.updatedAt,
     eventDate,
     eventActivities: sortedActivities,
+    hasAttachedForm: hasAttachedForm,
   };
 };
 
@@ -58,12 +62,82 @@ export const mapEventPartDtoToEventPart = (
       throw new BadRequestException(`Invalid activity date at index ${index}`);
     }
 
+    const fieldDefinitions = (activity.activityQuestions ?? []).map(
+      (question, questionIndex) => ({
+        label: question.label,
+        order: question.order ?? questionIndex,
+        type: question.type ?? FieldType.TEXT,
+        required: question.required ?? false,
+      }),
+    );
+
     return {
       title: activity.title,
       description: activity.description || '',
       date: parsedDate,
       order: activity.order ?? index,
       type: activity.type ?? EventPartType.OTHER,
+      ...(fieldDefinitions.length > 0
+        ? {
+            eventPartFieldDefinitions: {
+              create: fieldDefinitions,
+            },
+          }
+        : {}),
     };
   });
+};
+
+export type EventForm = {
+  eventActivities: {
+    order: number;
+    title: string;
+    eventPartFieldDefinitions: {
+      id: string;
+      type: FieldType;
+      order: number;
+      label: string;
+      required: boolean;
+    }[];
+  }[];
+};
+
+export type QuestionDto = {
+  id: string;
+  question: string;
+  required: boolean;
+  type: FieldType;
+};
+
+export type FormDto = {
+  activity: string;
+  questions: QuestionDto[];
+}[];
+
+export type AnswerDto = {
+  eventPartId: string;
+  questionId: string;
+  answer: string;
+};
+
+export const mapEventFormToDto = (eventForm: EventForm) => {
+  const dto: FormDto = [];
+
+  eventForm.eventActivities.forEach((activity) => {
+    const questions: QuestionDto[] = [];
+    activity.eventPartFieldDefinitions.forEach((question) => {
+      questions.push({
+        id: question.id,
+        question: question.label,
+        required: question.required,
+        type: question.type,
+      });
+    });
+
+    dto.push({
+      activity: activity.title,
+      questions: questions,
+    });
+  });
+  return dto;
 };
