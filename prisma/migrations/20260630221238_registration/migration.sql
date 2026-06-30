@@ -36,14 +36,13 @@ CREATE TABLE "registration" (
 
 -- CreateTable
 CREATE TABLE "registration_answer" (
-    "id" TEXT NOT NULL,
     "registration_id" TEXT NOT NULL,
     "field_definition_id" TEXT NOT NULL,
     "value" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "registration_answer_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "registration_answer_pkey" PRIMARY KEY ("registration_id","field_definition_id")
 );
 
 -- AddForeignKey
