@@ -53,6 +53,26 @@ export type Event = Prisma.EventModel
  */
 export type EventPart = Prisma.EventPartModel
 /**
+ * Model EventPartFieldDefinition
+ * 
+ */
+export type EventPartFieldDefinition = Prisma.EventPartFieldDefinitionModel
+/**
+ * Model FieldOption
+ * 
+ */
+export type FieldOption = Prisma.FieldOptionModel
+/**
+ * Model Registration
+ * 
+ */
+export type Registration = Prisma.RegistrationModel
+/**
+ * Model RegistrationAnswer
+ * 
+ */
+export type RegistrationAnswer = Prisma.RegistrationAnswerModel
+/**
  * Model Product
  * 
  */

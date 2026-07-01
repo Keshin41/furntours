@@ -35,6 +35,17 @@ export const EventPartType = {
 export type EventPartType = (typeof EventPartType)[keyof typeof EventPartType]
 
 
+export const FieldType = {
+  TEXT: 'TEXT',
+  NUMBER: 'NUMBER',
+  SELECT: 'SELECT',
+  CHECKBOX: 'CHECKBOX',
+  RADIO: 'RADIO'
+} as const
+
+export type FieldType = (typeof FieldType)[keyof typeof FieldType]
+
+
 export const OrderStatus = {
   PAID: 'PAID',
   PENDING: 'PENDING',
