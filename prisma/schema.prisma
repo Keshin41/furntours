@@ -127,6 +127,7 @@ model Registration {
 
   answers RegistrationAnswer[]
 
+  @@unique([userId, eventPartId])
   @@map("registration")
 }
 

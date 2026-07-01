@@ -54,6 +54,10 @@ export const ModelName = {
   User: 'User',
   Event: 'Event',
   EventPart: 'EventPart',
+  EventPartFieldDefinition: 'EventPartFieldDefinition',
+  FieldOption: 'FieldOption',
+  Registration: 'Registration',
+  RegistrationAnswer: 'RegistrationAnswer',
   Product: 'Product',
   OptionType: 'OptionType',
   OptionValue: 'OptionValue',
@@ -125,6 +129,50 @@ export const EventPartScalarFieldEnum = {
 } as const
 
 export type EventPartScalarFieldEnum = (typeof EventPartScalarFieldEnum)[keyof typeof EventPartScalarFieldEnum]
+
+
+export const EventPartFieldDefinitionScalarFieldEnum = {
+  id: 'id',
+  eventPartId: 'eventPartId',
+  label: 'label',
+  type: 'type',
+  required: 'required',
+  order: 'order'
+} as const
+
+export type EventPartFieldDefinitionScalarFieldEnum = (typeof EventPartFieldDefinitionScalarFieldEnum)[keyof typeof EventPartFieldDefinitionScalarFieldEnum]
+
+
+export const FieldOptionScalarFieldEnum = {
+  id: 'id',
+  fieldDefinitionId: 'fieldDefinitionId',
+  label: 'label',
+  order: 'order'
+} as const
+
+export type FieldOptionScalarFieldEnum = (typeof FieldOptionScalarFieldEnum)[keyof typeof FieldOptionScalarFieldEnum]
+
+
+export const RegistrationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  eventPartId: 'eventPartId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RegistrationScalarFieldEnum = (typeof RegistrationScalarFieldEnum)[keyof typeof RegistrationScalarFieldEnum]
+
+
+export const RegistrationAnswerScalarFieldEnum = {
+  registrationId: 'registrationId',
+  fieldDefinitionId: 'fieldDefinitionId',
+  value: 'value',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RegistrationAnswerScalarFieldEnum = (typeof RegistrationAnswerScalarFieldEnum)[keyof typeof RegistrationAnswerScalarFieldEnum]
 
 
 export const ProductScalarFieldEnum = {

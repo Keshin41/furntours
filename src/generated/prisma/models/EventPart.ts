@@ -233,6 +233,8 @@ export type EventPartWhereInput = {
   order?: Prisma.IntFilter<"EventPart"> | number
   type?: Prisma.EnumEventPartTypeFilter<"EventPart"> | $Enums.EventPartType
   event?: Prisma.XOR<Prisma.EventScalarRelationFilter, Prisma.EventWhereInput>
+  eventPartFieldDefinitions?: Prisma.EventPartFieldDefinitionListRelationFilter
+  registrations?: Prisma.RegistrationListRelationFilter
 }
 
 export type EventPartOrderByWithRelationInput = {
@@ -244,6 +246,8 @@ export type EventPartOrderByWithRelationInput = {
   order?: Prisma.SortOrder
   type?: Prisma.SortOrder
   event?: Prisma.EventOrderByWithRelationInput
+  eventPartFieldDefinitions?: Prisma.EventPartFieldDefinitionOrderByRelationAggregateInput
+  registrations?: Prisma.RegistrationOrderByRelationAggregateInput
 }
 
 export type EventPartWhereUniqueInput = Prisma.AtLeast<{
@@ -258,6 +262,8 @@ export type EventPartWhereUniqueInput = Prisma.AtLeast<{
   order?: Prisma.IntFilter<"EventPart"> | number
   type?: Prisma.EnumEventPartTypeFilter<"EventPart"> | $Enums.EventPartType
   event?: Prisma.XOR<Prisma.EventScalarRelationFilter, Prisma.EventWhereInput>
+  eventPartFieldDefinitions?: Prisma.EventPartFieldDefinitionListRelationFilter
+  registrations?: Prisma.RegistrationListRelationFilter
 }, "id">
 
 export type EventPartOrderByWithAggregationInput = {
@@ -296,6 +302,8 @@ export type EventPartCreateInput = {
   order: number
   type: $Enums.EventPartType
   event: Prisma.EventCreateNestedOneWithoutEventActivitiesInput
+  eventPartFieldDefinitions?: Prisma.EventPartFieldDefinitionCreateNestedManyWithoutEventPartInput
+  registrations?: Prisma.RegistrationCreateNestedManyWithoutEventPartInput
 }
 
 export type EventPartUncheckedCreateInput = {
@@ -306,6 +314,8 @@ export type EventPartUncheckedCreateInput = {
   date: Date | string
   order: number
   type: $Enums.EventPartType
+  eventPartFieldDefinitions?: Prisma.EventPartFieldDefinitionUncheckedCreateNestedManyWithoutEventPartInput
+  registrations?: Prisma.RegistrationUncheckedCreateNestedManyWithoutEventPartInput
 }
 
 export type EventPartUpdateInput = {
@@ -316,6 +326,8 @@ export type EventPartUpdateInput = {
   order?: Prisma.IntFieldUpdateOperationsInput | number
   type?: Prisma.EnumEventPartTypeFieldUpdateOperationsInput | $Enums.EventPartType
   event?: Prisma.EventUpdateOneRequiredWithoutEventActivitiesNestedInput
+  eventPartFieldDefinitions?: Prisma.EventPartFieldDefinitionUpdateManyWithoutEventPartNestedInput
+  registrations?: Prisma.RegistrationUpdateManyWithoutEventPartNestedInput
 }
 
 export type EventPartUncheckedUpdateInput = {
@@ -326,6 +338,8 @@ export type EventPartUncheckedUpdateInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.IntFieldUpdateOperationsInput | number
   type?: Prisma.EnumEventPartTypeFieldUpdateOperationsInput | $Enums.EventPartType
+  eventPartFieldDefinitions?: Prisma.EventPartFieldDefinitionUncheckedUpdateManyWithoutEventPartNestedInput
+  registrations?: Prisma.RegistrationUncheckedUpdateManyWithoutEventPartNestedInput
 }
 
 export type EventPartCreateManyInput = {
@@ -405,6 +419,11 @@ export type EventPartSumOrderByAggregateInput = {
   order?: Prisma.SortOrder
 }
 
+export type EventPartScalarRelationFilter = {
+  is?: Prisma.EventPartWhereInput
+  isNot?: Prisma.EventPartWhereInput
+}
+
 export type EventPartCreateNestedManyWithoutEventInput = {
   create?: Prisma.XOR<Prisma.EventPartCreateWithoutEventInput, Prisma.EventPartUncheckedCreateWithoutEventInput> | Prisma.EventPartCreateWithoutEventInput[] | Prisma.EventPartUncheckedCreateWithoutEventInput[]
   connectOrCreate?: Prisma.EventPartCreateOrConnectWithoutEventInput | Prisma.EventPartCreateOrConnectWithoutEventInput[]
@@ -459,6 +478,34 @@ export type EnumEventPartTypeFieldUpdateOperationsInput = {
   set?: $Enums.EventPartType
 }
 
+export type EventPartCreateNestedOneWithoutEventPartFieldDefinitionsInput = {
+  create?: Prisma.XOR<Prisma.EventPartCreateWithoutEventPartFieldDefinitionsInput, Prisma.EventPartUncheckedCreateWithoutEventPartFieldDefinitionsInput>
+  connectOrCreate?: Prisma.EventPartCreateOrConnectWithoutEventPartFieldDefinitionsInput
+  connect?: Prisma.EventPartWhereUniqueInput
+}
+
+export type EventPartUpdateOneRequiredWithoutEventPartFieldDefinitionsNestedInput = {
+  create?: Prisma.XOR<Prisma.EventPartCreateWithoutEventPartFieldDefinitionsInput, Prisma.EventPartUncheckedCreateWithoutEventPartFieldDefinitionsInput>
+  connectOrCreate?: Prisma.EventPartCreateOrConnectWithoutEventPartFieldDefinitionsInput
+  upsert?: Prisma.EventPartUpsertWithoutEventPartFieldDefinitionsInput
+  connect?: Prisma.EventPartWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.EventPartUpdateToOneWithWhereWithoutEventPartFieldDefinitionsInput, Prisma.EventPartUpdateWithoutEventPartFieldDefinitionsInput>, Prisma.EventPartUncheckedUpdateWithoutEventPartFieldDefinitionsInput>
+}
+
+export type EventPartCreateNestedOneWithoutRegistrationsInput = {
+  create?: Prisma.XOR<Prisma.EventPartCreateWithoutRegistrationsInput, Prisma.EventPartUncheckedCreateWithoutRegistrationsInput>
+  connectOrCreate?: Prisma.EventPartCreateOrConnectWithoutRegistrationsInput
+  connect?: Prisma.EventPartWhereUniqueInput
+}
+
+export type EventPartUpdateOneRequiredWithoutRegistrationsNestedInput = {
+  create?: Prisma.XOR<Prisma.EventPartCreateWithoutRegistrationsInput, Prisma.EventPartUncheckedCreateWithoutRegistrationsInput>
+  connectOrCreate?: Prisma.EventPartCreateOrConnectWithoutRegistrationsInput
+  upsert?: Prisma.EventPartUpsertWithoutRegistrationsInput
+  connect?: Prisma.EventPartWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.EventPartUpdateToOneWithWhereWithoutRegistrationsInput, Prisma.EventPartUpdateWithoutRegistrationsInput>, Prisma.EventPartUncheckedUpdateWithoutRegistrationsInput>
+}
+
 export type EventPartCreateWithoutEventInput = {
   id?: string
   title: string
@@ -466,6 +513,8 @@ export type EventPartCreateWithoutEventInput = {
   date: Date | string
   order: number
   type: $Enums.EventPartType
+  eventPartFieldDefinitions?: Prisma.EventPartFieldDefinitionCreateNestedManyWithoutEventPartInput
+  registrations?: Prisma.RegistrationCreateNestedManyWithoutEventPartInput
 }
 
 export type EventPartUncheckedCreateWithoutEventInput = {
@@ -475,6 +524,8 @@ export type EventPartUncheckedCreateWithoutEventInput = {
   date: Date | string
   order: number
   type: $Enums.EventPartType
+  eventPartFieldDefinitions?: Prisma.EventPartFieldDefinitionUncheckedCreateNestedManyWithoutEventPartInput
+  registrations?: Prisma.RegistrationUncheckedCreateNestedManyWithoutEventPartInput
 }
 
 export type EventPartCreateOrConnectWithoutEventInput = {
@@ -516,6 +567,126 @@ export type EventPartScalarWhereInput = {
   type?: Prisma.EnumEventPartTypeFilter<"EventPart"> | $Enums.EventPartType
 }
 
+export type EventPartCreateWithoutEventPartFieldDefinitionsInput = {
+  id?: string
+  title: string
+  description: string
+  date: Date | string
+  order: number
+  type: $Enums.EventPartType
+  event: Prisma.EventCreateNestedOneWithoutEventActivitiesInput
+  registrations?: Prisma.RegistrationCreateNestedManyWithoutEventPartInput
+}
+
+export type EventPartUncheckedCreateWithoutEventPartFieldDefinitionsInput = {
+  id?: string
+  eventId: string
+  title: string
+  description: string
+  date: Date | string
+  order: number
+  type: $Enums.EventPartType
+  registrations?: Prisma.RegistrationUncheckedCreateNestedManyWithoutEventPartInput
+}
+
+export type EventPartCreateOrConnectWithoutEventPartFieldDefinitionsInput = {
+  where: Prisma.EventPartWhereUniqueInput
+  create: Prisma.XOR<Prisma.EventPartCreateWithoutEventPartFieldDefinitionsInput, Prisma.EventPartUncheckedCreateWithoutEventPartFieldDefinitionsInput>
+}
+
+export type EventPartUpsertWithoutEventPartFieldDefinitionsInput = {
+  update: Prisma.XOR<Prisma.EventPartUpdateWithoutEventPartFieldDefinitionsInput, Prisma.EventPartUncheckedUpdateWithoutEventPartFieldDefinitionsInput>
+  create: Prisma.XOR<Prisma.EventPartCreateWithoutEventPartFieldDefinitionsInput, Prisma.EventPartUncheckedCreateWithoutEventPartFieldDefinitionsInput>
+  where?: Prisma.EventPartWhereInput
+}
+
+export type EventPartUpdateToOneWithWhereWithoutEventPartFieldDefinitionsInput = {
+  where?: Prisma.EventPartWhereInput
+  data: Prisma.XOR<Prisma.EventPartUpdateWithoutEventPartFieldDefinitionsInput, Prisma.EventPartUncheckedUpdateWithoutEventPartFieldDefinitionsInput>
+}
+
+export type EventPartUpdateWithoutEventPartFieldDefinitionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  type?: Prisma.EnumEventPartTypeFieldUpdateOperationsInput | $Enums.EventPartType
+  event?: Prisma.EventUpdateOneRequiredWithoutEventActivitiesNestedInput
+  registrations?: Prisma.RegistrationUpdateManyWithoutEventPartNestedInput
+}
+
+export type EventPartUncheckedUpdateWithoutEventPartFieldDefinitionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  eventId?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  type?: Prisma.EnumEventPartTypeFieldUpdateOperationsInput | $Enums.EventPartType
+  registrations?: Prisma.RegistrationUncheckedUpdateManyWithoutEventPartNestedInput
+}
+
+export type EventPartCreateWithoutRegistrationsInput = {
+  id?: string
+  title: string
+  description: string
+  date: Date | string
+  order: number
+  type: $Enums.EventPartType
+  event: Prisma.EventCreateNestedOneWithoutEventActivitiesInput
+  eventPartFieldDefinitions?: Prisma.EventPartFieldDefinitionCreateNestedManyWithoutEventPartInput
+}
+
+export type EventPartUncheckedCreateWithoutRegistrationsInput = {
+  id?: string
+  eventId: string
+  title: string
+  description: string
+  date: Date | string
+  order: number
+  type: $Enums.EventPartType
+  eventPartFieldDefinitions?: Prisma.EventPartFieldDefinitionUncheckedCreateNestedManyWithoutEventPartInput
+}
+
+export type EventPartCreateOrConnectWithoutRegistrationsInput = {
+  where: Prisma.EventPartWhereUniqueInput
+  create: Prisma.XOR<Prisma.EventPartCreateWithoutRegistrationsInput, Prisma.EventPartUncheckedCreateWithoutRegistrationsInput>
+}
+
+export type EventPartUpsertWithoutRegistrationsInput = {
+  update: Prisma.XOR<Prisma.EventPartUpdateWithoutRegistrationsInput, Prisma.EventPartUncheckedUpdateWithoutRegistrationsInput>
+  create: Prisma.XOR<Prisma.EventPartCreateWithoutRegistrationsInput, Prisma.EventPartUncheckedCreateWithoutRegistrationsInput>
+  where?: Prisma.EventPartWhereInput
+}
+
+export type EventPartUpdateToOneWithWhereWithoutRegistrationsInput = {
+  where?: Prisma.EventPartWhereInput
+  data: Prisma.XOR<Prisma.EventPartUpdateWithoutRegistrationsInput, Prisma.EventPartUncheckedUpdateWithoutRegistrationsInput>
+}
+
+export type EventPartUpdateWithoutRegistrationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  type?: Prisma.EnumEventPartTypeFieldUpdateOperationsInput | $Enums.EventPartType
+  event?: Prisma.EventUpdateOneRequiredWithoutEventActivitiesNestedInput
+  eventPartFieldDefinitions?: Prisma.EventPartFieldDefinitionUpdateManyWithoutEventPartNestedInput
+}
+
+export type EventPartUncheckedUpdateWithoutRegistrationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  eventId?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  type?: Prisma.EnumEventPartTypeFieldUpdateOperationsInput | $Enums.EventPartType
+  eventPartFieldDefinitions?: Prisma.EventPartFieldDefinitionUncheckedUpdateManyWithoutEventPartNestedInput
+}
+
 export type EventPartCreateManyEventInput = {
   id?: string
   title: string
@@ -532,6 +703,8 @@ export type EventPartUpdateWithoutEventInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.IntFieldUpdateOperationsInput | number
   type?: Prisma.EnumEventPartTypeFieldUpdateOperationsInput | $Enums.EventPartType
+  eventPartFieldDefinitions?: Prisma.EventPartFieldDefinitionUpdateManyWithoutEventPartNestedInput
+  registrations?: Prisma.RegistrationUpdateManyWithoutEventPartNestedInput
 }
 
 export type EventPartUncheckedUpdateWithoutEventInput = {
@@ -541,6 +714,8 @@ export type EventPartUncheckedUpdateWithoutEventInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.IntFieldUpdateOperationsInput | number
   type?: Prisma.EnumEventPartTypeFieldUpdateOperationsInput | $Enums.EventPartType
+  eventPartFieldDefinitions?: Prisma.EventPartFieldDefinitionUncheckedUpdateManyWithoutEventPartNestedInput
+  registrations?: Prisma.RegistrationUncheckedUpdateManyWithoutEventPartNestedInput
 }
 
 export type EventPartUncheckedUpdateManyWithoutEventInput = {
@@ -553,6 +728,44 @@ export type EventPartUncheckedUpdateManyWithoutEventInput = {
 }
 
 
+/**
+ * Count Type EventPartCountOutputType
+ */
+
+export type EventPartCountOutputType = {
+  eventPartFieldDefinitions: number
+  registrations: number
+}
+
+export type EventPartCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  eventPartFieldDefinitions?: boolean | EventPartCountOutputTypeCountEventPartFieldDefinitionsArgs
+  registrations?: boolean | EventPartCountOutputTypeCountRegistrationsArgs
+}
+
+/**
+ * EventPartCountOutputType without action
+ */
+export type EventPartCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the EventPartCountOutputType
+   */
+  select?: Prisma.EventPartCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * EventPartCountOutputType without action
+ */
+export type EventPartCountOutputTypeCountEventPartFieldDefinitionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.EventPartFieldDefinitionWhereInput
+}
+
+/**
+ * EventPartCountOutputType without action
+ */
+export type EventPartCountOutputTypeCountRegistrationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RegistrationWhereInput
+}
+
 
 export type EventPartSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -563,6 +776,9 @@ export type EventPartSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   order?: boolean
   type?: boolean
   event?: boolean | Prisma.EventDefaultArgs<ExtArgs>
+  eventPartFieldDefinitions?: boolean | Prisma.EventPart$eventPartFieldDefinitionsArgs<ExtArgs>
+  registrations?: boolean | Prisma.EventPart$registrationsArgs<ExtArgs>
+  _count?: boolean | Prisma.EventPartCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["eventPart"]>
 
 export type EventPartSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -600,6 +816,9 @@ export type EventPartSelectScalar = {
 export type EventPartOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "eventId" | "title" | "description" | "date" | "order" | "type", ExtArgs["result"]["eventPart"]>
 export type EventPartInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   event?: boolean | Prisma.EventDefaultArgs<ExtArgs>
+  eventPartFieldDefinitions?: boolean | Prisma.EventPart$eventPartFieldDefinitionsArgs<ExtArgs>
+  registrations?: boolean | Prisma.EventPart$registrationsArgs<ExtArgs>
+  _count?: boolean | Prisma.EventPartCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type EventPartIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   event?: boolean | Prisma.EventDefaultArgs<ExtArgs>
@@ -612,6 +831,8 @@ export type $EventPartPayload<ExtArgs extends runtime.Types.Extensions.InternalA
   name: "EventPart"
   objects: {
     event: Prisma.$EventPayload<ExtArgs>
+    eventPartFieldDefinitions: Prisma.$EventPartFieldDefinitionPayload<ExtArgs>[]
+    registrations: Prisma.$RegistrationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1016,6 +1237,8 @@ readonly fields: EventPartFieldRefs;
 export interface Prisma__EventPartClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   event<T extends Prisma.EventDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.EventDefaultArgs<ExtArgs>>): Prisma.Prisma__EventClient<runtime.Types.Result.GetResult<Prisma.$EventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  eventPartFieldDefinitions<T extends Prisma.EventPart$eventPartFieldDefinitionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.EventPart$eventPartFieldDefinitionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EventPartFieldDefinitionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  registrations<T extends Prisma.EventPart$registrationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.EventPart$registrationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RegistrationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1445,6 +1668,54 @@ export type EventPartDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Limit how many EventParts to delete.
    */
   limit?: number
+}
+
+/**
+ * EventPart.eventPartFieldDefinitions
+ */
+export type EventPart$eventPartFieldDefinitionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the EventPartFieldDefinition
+   */
+  select?: Prisma.EventPartFieldDefinitionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the EventPartFieldDefinition
+   */
+  omit?: Prisma.EventPartFieldDefinitionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.EventPartFieldDefinitionInclude<ExtArgs> | null
+  where?: Prisma.EventPartFieldDefinitionWhereInput
+  orderBy?: Prisma.EventPartFieldDefinitionOrderByWithRelationInput | Prisma.EventPartFieldDefinitionOrderByWithRelationInput[]
+  cursor?: Prisma.EventPartFieldDefinitionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.EventPartFieldDefinitionScalarFieldEnum | Prisma.EventPartFieldDefinitionScalarFieldEnum[]
+}
+
+/**
+ * EventPart.registrations
+ */
+export type EventPart$registrationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Registration
+   */
+  select?: Prisma.RegistrationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Registration
+   */
+  omit?: Prisma.RegistrationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RegistrationInclude<ExtArgs> | null
+  where?: Prisma.RegistrationWhereInput
+  orderBy?: Prisma.RegistrationOrderByWithRelationInput | Prisma.RegistrationOrderByWithRelationInput[]
+  cursor?: Prisma.RegistrationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RegistrationScalarFieldEnum | Prisma.RegistrationScalarFieldEnum[]
 }
 
 /**

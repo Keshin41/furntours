@@ -56,6 +56,10 @@ export const mapEventPartDtoToEventPart = (
   eventActivities: CreateEventDto['eventActivities'],
 ) => {
   return eventActivities.map((activity, index) => {
+    console.log(
+      '🚀 ~ mapEventPartDtoToEventPart ~ activity.activityQuestions:',
+      activity.activityQuestions,
+    );
     const parsedDate = new Date(activity.date);
 
     if (Number.isNaN(parsedDate.getTime())) {

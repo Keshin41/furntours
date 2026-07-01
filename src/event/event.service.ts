@@ -74,6 +74,10 @@ export class EventService {
   }
 
   async createMeet(createEventDto: CreateEventDto) {
+    console.log(
+      '🚀 ~ EventService ~ createMeet ~ createEventDto:',
+      createEventDto,
+    );
     const eventActivities = mapEventPartDtoToEventPart(
       createEventDto.eventActivities,
     );
@@ -97,6 +101,10 @@ export class EventService {
   }
 
   async updateById(eventId: string, eventUpdateDto: UpdateEventDto) {
+    console.log(
+      '🚀 ~ EventService ~ updateById ~ eventUpdateDto:',
+      eventUpdateDto,
+    );
     const existingEvent = await this.prisma.event.findUnique({
       where: { id: eventId },
       select: { id: true, type: true },
