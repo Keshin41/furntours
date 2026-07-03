@@ -38,6 +38,12 @@ export class EventController {
     return this.eventService.findAll();
   }
 
+  @UseGuards(AuthGuard)
+  @Get('/registrations')
+  getRegistrations() {
+    return this.eventService.getRegistrations();
+  }
+
   @Get('/:id')
   getById(@Param('id') id: string) {
     return this.eventService.findById(id);
@@ -46,12 +52,6 @@ export class EventController {
   @Get('/:id/form')
   getFormById(@Param('id') id: string) {
     return this.eventService.getEventForm(id);
-  }
-
-  @UseGuards(AuthGuard)
-  @Get('/registrations')
-  getRegistrations() {
-    return this.eventService.getRegistrations();
   }
 
   @Post('/:id/form')

@@ -6,11 +6,7 @@ import {
 } from '@nestjs/common';
 import { EventPartType, EventType } from 'src/generated/prisma/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
-import {
-  EVENT_FORM_INCLUDE,
-  EVENT_INCLUDE,
-  REGISTRATION_INCLUDE,
-} from './constant';
+import { EVENT_FORM_INCLUDE, EVENT_INCLUDE } from './constant';
 import { CreateEventDto, UpdateEventDto } from './event.dto';
 import {
   FormAnswersDto,
@@ -236,8 +232,50 @@ export class EventService {
 
   async getRegistrations() {
     const registrations = await this.prisma.registration.findMany({
-      include: REGISTRATION_INCLUDE,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        user: {
+          select: {
+            nickname: true,
+          },
+        },
+        eventPart: {
+          select: {
+            id: true,
+            title: true,
+            event: {
+              select: {
+                title: true,
+              },
+            },
+          },
+        },
+        answers: {
+          select: {
+            value: true,
+            fieldDefinition: {
+              select: {
+                label: true,
+              },
+            },
+          },
+        },
+      },
     });
-    return registrations;
+    const truc = registrations.map((registration) => ({
+      event: registration.eventPart.event.title,
+      nickname: registration.user.nickname,
+      eventPart: {
+        id: registration.eventPart.id,
+        label: registration.eventPart.title,
+      },
+      choices: registration.answers.map((answer) => ({
+        id: answer.fieldDefinition.label,
+        value: answer.value,
+      })),
+    }));
+    return truc;
   }
 }
