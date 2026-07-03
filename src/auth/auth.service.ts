@@ -15,7 +15,6 @@ export class AuthService {
 
   async login(data: LoginDTO): Promise<AuthResponse> {
     const user = await this.userService.findByEmail(data.email);
-    console.log('user', user);
 
     const isPasswordValid: boolean = await compare(
       data.password,
@@ -26,7 +25,6 @@ export class AuthService {
     }
     const payload: JwtPayload = { sub: user.id };
     const accessToken = await this.jwtService.signAsync(payload);
-    console.log('token', accessToken);
     return { accessToken: accessToken };
   }
 }

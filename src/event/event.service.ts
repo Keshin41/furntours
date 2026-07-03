@@ -1,7 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { EventPartType, EventType } from 'src/generated/prisma/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { EVENT_FORM_INCLUDE, EVENT_INCLUDE } from './constant';
+import {
+  EVENT_FORM_INCLUDE,
+  EVENT_INCLUDE,
+  REGISTRATION_INCLUDE,
+} from './constant';
 import { CreateEventDto, UpdateEventDto } from './event.dto';
 import {
   FormAnswersDto,
@@ -173,8 +182,6 @@ export class EventService {
 
     if (eventForm == null) return null;
 
-    console.log(eventForm.eventActivities[0].eventPartFieldDefinitions);
-
     return mapEventFormToDto(eventForm);
   }
 
@@ -191,6 +198,20 @@ export class EventService {
       },
       update: {},
     });
+
+    const count = await this.prisma.registration.count({
+      where: {
+        userId: user.id,
+        eventPartId: {
+          in: formAnswers.activities.map((activity) => activity.activityId),
+        },
+      },
+    });
+
+    const isAlreadyAnswered = count > 0;
+
+    if (isAlreadyAnswered)
+      throw new HttpException('Erreur', HttpStatus.BAD_REQUEST);
 
     for (const activityAnswersDto of formAnswers.activities) {
       if (activityAnswersDto.present) {
@@ -211,5 +232,12 @@ export class EventService {
         }
       }
     }
+  }
+
+  async getRegistrations() {
+    const registrations = await this.prisma.registration.findMany({
+      include: REGISTRATION_INCLUDE,
+    });
+    return registrations;
   }
 }
