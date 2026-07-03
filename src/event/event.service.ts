@@ -173,6 +173,8 @@ export class EventService {
 
     if (eventForm == null) return null;
 
+    console.log(eventForm.eventActivities[0].eventPartFieldDefinitions);
+
     return mapEventFormToDto(eventForm);
   }
 

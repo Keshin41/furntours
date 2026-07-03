@@ -67,12 +67,28 @@ export const mapEventPartDtoToEventPart = (
     }
 
     const fieldDefinitions = (activity.activityQuestions ?? []).map(
-      (question, questionIndex) => ({
-        label: question.label,
-        order: question.order ?? questionIndex,
-        type: question.type ?? FieldType.TEXT,
-        required: question.required ?? false,
-      }),
+      (question, questionIndex) => {
+        const fieldOptions = (question.choices ?? []).map(
+          (option, optionIndex) => ({
+            label: option.label,
+            order: option.order ?? optionIndex,
+          }),
+        );
+
+        return {
+          label: question.label,
+          order: question.order ?? questionIndex,
+          type: question.type ?? FieldType.TEXT,
+          required: question.required ?? false,
+          ...(fieldOptions.length > 0
+            ? {
+                options: {
+                  create: fieldOptions,
+                },
+              }
+            : {}),
+        };
+      },
     );
 
     return {
@@ -103,8 +119,20 @@ export type EventForm = {
       order: number;
       label: string;
       required: boolean;
+      options: {
+        id: string;
+        label: string;
+        order: number;
+      }[];
     }[];
   }[];
+};
+
+export type OptionDto = {
+  id: string;
+  label: string;
+  value: string;
+  order: number;
 };
 
 export type QuestionDto = {
@@ -112,6 +140,7 @@ export type QuestionDto = {
   question: string;
   required: boolean;
   type: FieldType;
+  options: OptionDto[];
 };
 
 export type FormDto = {
@@ -142,11 +171,21 @@ export const mapEventFormToDto = (eventForm: EventForm) => {
   eventForm.eventActivities.forEach((activity) => {
     const questions: QuestionDto[] = [];
     activity.eventPartFieldDefinitions.forEach((question) => {
+      const options: OptionDto[] = [];
+      question.options.forEach((option) => {
+        options.push({
+          id: option.id,
+          label: option.label,
+          order: option.order,
+          value: option.id,
+        });
+      });
       questions.push({
         id: question.id,
         question: question.label,
         required: question.required,
         type: question.type,
+        options: options,
       });
     });
 
