@@ -48,6 +48,12 @@ export class EventController {
     return this.eventService.getEventForm(id);
   }
 
+  @UseGuards(AuthGuard)
+  @Get('/registrations')
+  getRegistrations() {
+    return this.eventService.getRegistrations();
+  }
+
   @Post('/:id/form')
   processFormAnswer(@Body() formAnswers: FormAnswersDto) {
     return this.eventService.processFormAnswer(formAnswers);

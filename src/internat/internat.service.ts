@@ -143,7 +143,6 @@ export class InternatService {
               },
             },
           });
-          console.log(user);
 
           const hasTicket = user.tickets.some(
             (ticket) =>
@@ -351,9 +350,6 @@ export class InternatService {
 
         return { paymentIntent, internatBasket };
       });
-
-    console.log('data renvoyees', { paymentIntent, internatBasket });
-
     return { paymentIntent: paymentIntent, basket: internatBasket };
   };
 

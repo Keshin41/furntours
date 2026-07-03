@@ -177,7 +177,7 @@ export const mapEventFormToDto = (eventForm: EventForm) => {
           id: option.id,
           label: option.label,
           order: option.order,
-          value: option.id,
+          value: option.label,
         });
       });
       questions.push({

@@ -48,3 +48,35 @@ export const EVENT_FORM_INCLUDE = {
     },
   },
 };
+
+export const REGISTRATION_INCLUDE = {
+  user: {
+    select: {
+      nickname: true,
+    },
+  },
+  eventPart: {
+    select: {
+      id: true,
+      title: true,
+      event: {
+        select: {
+          title: true,
+        },
+      },
+    },
+    orderBy: {
+      order: 'asc' as const,
+    },
+  },
+  answers: {
+    select: {
+      value: true,
+      fieldDefinition: {
+        select: {
+          label: true,
+        },
+      },
+    },
+  },
+};
