@@ -27,6 +27,16 @@ export const EVENT_FORM_INCLUDE = {
           order: true,
           label: true,
           required: true,
+          options: {
+            select: {
+              id: true,
+              label: true,
+              order: true,
+            },
+            orderBy: {
+              order: 'asc' as const,
+            },
+          },
         },
         orderBy: {
           order: 'asc' as const,

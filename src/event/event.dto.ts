@@ -2,11 +2,17 @@ import { createZodDto } from 'nestjs-zod';
 import { EventPartType, FieldType } from 'src/generated/prisma/enums';
 import { z } from 'zod';
 
+const EventActivityQuestionOptionSchema = z.object({
+  label: z.string().trim().min(1),
+  order: z.number().int().nonnegative().optional(),
+});
+
 const EventActivityQuestionSchema = z.object({
   label: z.string().trim().min(1),
   order: z.number().int().nonnegative().optional(),
   type: z.enum(FieldType).optional().default(FieldType.TEXT),
   required: z.boolean().default(false),
+  choices: z.array(EventActivityQuestionOptionSchema).optional(),
 });
 
 const EventActivitySchema = z.object({
