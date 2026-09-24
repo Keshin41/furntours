@@ -194,7 +194,7 @@ export class EventService {
         email: formAnswers.email,
         firstname: 'firstname',
         lastname: 'lastname',
-        nickname: 'nickname',
+        nickname: formAnswers.nickname,
       },
       update: {},
     });

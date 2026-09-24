@@ -156,6 +156,7 @@ export type AnswerDto = {
 
 export type FormAnswersDto = {
   email: string;
+  nickname: string;
   activities: ActivityAnswersDto[];
 };
 
